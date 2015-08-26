@@ -11,6 +11,8 @@
 ; This file should be compiled with "as	-M"
 
 ; ===========================================================================
+
+	include "RAM Equates.asm"
 align macro
 	cnop 0,\1
 	endm
@@ -611,9 +613,9 @@ loc_CD4:				; XREF: loc_C76
 
 loc_D50:
 		move.w	#0,($A11100).l
-		movem.l	($FFFFF700).w,d0-d7
+		movem.l	(Camera_Horizontal_Pos).w,d0-d7
 		movem.l	d0-d7,($FFFFFF10).w
-		movem.l	($FFFFF754).w,d0-d1
+		movem.l	(Camera_RAM+$54).w,d0-d1
 		movem.l	d0-d1,($FFFFFF30).w
 		cmpi.b	#$60,($FFFFF625).w
 		bcc.s	Demo_Time
@@ -752,9 +754,9 @@ loc_EEE:
 
 loc_F54:
 		move.w	#0,($A11100).l	; start	the Z80
-		movem.l	($FFFFF700).w,d0-d7
+		movem.l	(Camera_Horizontal_Pos).w,d0-d7
 		movem.l	d0-d7,($FFFFFF10).w
-		movem.l	($FFFFF754).w,d0-d1
+		movem.l	(Camera_RAM+$54).w,d0-d1
 		movem.l	d0-d1,($FFFFFF30).w
 		bsr.w	LoadTilesAsYouMove
 		jsr	AniArt_Load
@@ -1092,7 +1094,7 @@ loc_133A:
 		move.l	d0,(a1)+
 		dbf	d1,loc_133A
 
-		lea	($FFFFCC00).w,a1
+		lea	(Horiz_Scroll_Buf).w,a1
 		moveq	#0,d0
 		move.w	#$100,d1
 
@@ -2088,7 +2090,7 @@ loc_19D8:
 		move.b	byte_1A3C(pc,d0.w),d0
 		beq.s	locret_1A3A
 		moveq	#1,d1
-		tst.b	($FFFFF7C0).w
+		tst.b	(Camera_RAM+$C0).w
 		beq.s	loc_19F0
 		neg.w	d1
 
@@ -2236,7 +2238,7 @@ loc_1B06:				; XREF: PalCycle_SBZ
 
 loc_1B2E:
 		moveq	#-1,d1
-		tst.b	($FFFFF7C0).w
+		tst.b	(Camera_RAM+$C0).w
 		beq.s	loc_1B38
 		neg.w	d1
 
@@ -3129,7 +3131,7 @@ TitleScreen:				; XREF: GameModeArray
 		move.w	#$8720,(a6)
 		clr.b	($FFFFF64E).w
 		bsr.w	ClearScreen
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -3162,7 +3164,7 @@ Title_ClrPallet:
 
 		moveq	#3,d0		; load Sonic's pallet
 		bsr.w	PalLoad1
-		move.b	#$8A,($FFFFD080).w ; load "SONIC TEAM PRESENTS"	object
+		move.b	#$8A,(Object_RAM+$80).w ; load "SONIC TEAM PRESENTS"	object
 		jsr	ObjectsLoad
 		jsr	BuildSprites
 		bsr.w	Pal_FadeTo
@@ -3193,7 +3195,7 @@ Title_LoadText:
 		move.w	#0,($FFFFF634).w ; disable pallet cycling
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBgLayer
-		lea	($FFFFB000).w,a1
+		lea	(Block_RAM).w,a1
 		lea	(Blk16_GHZ).l,a0 ; load	GHZ 16x16 mappings
 		move.w	#0,d0
 		bsr.w	EniDec
@@ -3206,7 +3208,7 @@ Title_LoadText:
 		bsr.w	ClearScreen
 		lea	($C00004).l,a5
 		lea	($C00000).l,a6
-		lea	($FFFFF708).w,a3
+		lea	(Camera_RAM+$08).w,a3
 		movea.l	($FFFFA404).w,a4			; MJ: Load address of layout BG
 		move.w	#$6000,d2
 		bsr.w	LoadTilesFromStart2
@@ -3228,7 +3230,7 @@ Title_LoadText:
 		bsr.w	PlaySound_Special
 		move.b	#0,($FFFFFFFA).w ; disable debug mode
 		move.w	#$178,($FFFFF614).w ; run title	screen for $178	frames
-		lea	($FFFFD080).w,a1
+		lea	(Object_RAM+$80).w,a1
 		moveq	#0,d0
 		move.w	#7,d1
 
@@ -3236,12 +3238,12 @@ Title_ClrObjRam2:
 		move.l	d0,(a1)+
 		dbf	d1,Title_ClrObjRam2
 
-		move.b	#$E,($FFFFD040).w ; load big Sonic object
-		move.b	#$F,($FFFFD080).w ; load "PRESS	START BUTTON" object
-		move.b	#$F,($FFFFD0C0).w ; load "TM" object
-		move.b	#3,($FFFFD0DA).w
-		move.b	#$F,($FFFFD100).w
-		move.b	#2,($FFFFD11A).w
+		move.b	#$E,(Secondary_Object_RAM).w ; load big Sonic object
+		move.b	#$F,(Object_RAM+$80).w ; load "PRESS	START BUTTON" object
+		move.b	#$F,(Object_RAM+$C0).w ; load "TM" object
+		move.b	#3,(Object_RAM+$DA).w
+		move.b	#$F,(Object_RAM+$100).w
+		move.b	#2,(Object_RAM+$11A).w
 		jsr	ObjectsLoad
 		bsr.w	DeformBgLayer
 		jsr	BuildSprites
@@ -3262,9 +3264,9 @@ loc_317C:
 		jsr	BuildSprites
 		bsr.w	PalCycle_Title
 		bsr.w	RunPLC_RAM
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		addq.w	#2,d0
-		move.w	d0,($FFFFD008).w ; move	Sonic to the right
+		move.w	d0,(Object_RAM+$08).w ; move	Sonic to the right
 		cmpi.w	#$1C00,d0	; has Sonic object passed x-position $1C00?
 		bcs.s	Title_ChkRegion	; if not, branch
 		move.b	#0,($FFFFF600).w ; go to Sega screen
@@ -3334,7 +3336,7 @@ Title_ChkLevSel:
 		beq.w	PlayLevel	; if not, play level
 		moveq	#2,d0
 		bsr.w	PalLoad2	; load level select pallet
-		lea	($FFFFCC00).w,a1
+		lea	(Horiz_Scroll_Buf).w,a1
 		moveq	#0,d0
 		move.w	#$DF,d1
 
@@ -3471,9 +3473,9 @@ loc_33B6:				; XREF: loc_33E4
 		bsr.w	DeformBgLayer
 		bsr.w	PalCycle_Load
 		bsr.w	RunPLC_RAM
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		addq.w	#2,d0
-		move.w	d0,($FFFFD008).w
+		move.w	d0,(Object_RAM+$08).w
 		cmpi.w	#$1C00,d0
 		bcs.s	loc_33E4
 		move.b	#0,($FFFFF600).w ; set screen mode to 00 (level)
@@ -3687,13 +3689,6 @@ loc_3598:				; XREF: LevSel_ChgLine
 LevelMenuText:	incbin	misc\menutext.bin
 		even
 ; ---------------------------------------------------------------------------
-; Music	playlist
-; ---------------------------------------------------------------------------
-MusicList:	incbin	misc\muslist1.bin
-		even
-; ===========================================================================
-
-; ---------------------------------------------------------------------------
 ; Level
 ; ---------------------------------------------------------------------------
 
@@ -3729,7 +3724,7 @@ loc_37FC:
 		bsr.w	LoadPLC		; load standard	patterns
 
 Level_ClrRam:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -3745,7 +3740,7 @@ Level_ClrVars:
 		move.l	d0,(a1)+
 		dbf	d1,Level_ClrVars ; clear misc variables
 
-		lea	($FFFFF700).w,a1
+		lea	(Camera_Horizontal_Pos).w,a1
 		moveq	#0,d0
 		move.w	#$3F,d1
 
@@ -3804,36 +3799,45 @@ Level_WaterPal:
 		bsr.w	PalLoad3_Water	; load underwater pallet (see d0)
 		tst.b	($FFFFFE30).w
 		beq.s	Level_GetBgm
-		move.b	($FFFFFE53).w,($FFFFF64E).w
-
+		move.b	($FFFFFE53).w,($FFFFF64E).w	
+; ===========================================================================	
+; Music	playlist
+; ===========================================================================	
+MusicList:	
+; ---------------------------------------------------------------------------
+; Pretty self-explanatory. The playlist system has been updated to support 
+; 1 track per Act. You're welcome.
+;	Level 			Acts |1| |2| |3| |4|		
+; ---------------------------------------------------------------------------	
+	GHZ_Playlist: 	dc.w $81,$81,$81,$81
+	LZ_Playlist: 	dc.w $82,$82,$82,$86
+	MZ_Playlist: 	dc.w $83,$83,$83,$83
+	SLZ_Playlist: 	dc.w $84,$84,$84,$84
+	SYZ_Playlist: 	dc.w $85,$85,$85,$85
+	SBZ_Playlist: 	dc.w $86,$86,$8D,$86
+		even
+; ===========================================================================			
 Level_GetBgm:
 		tst.w	($FFFFFFF0).w
 		bmi.s	loc_3946
 		moveq	#0,d0
-		move.b	($FFFFFE10).w,d0
-		cmpi.w	#$103,($FFFFFE10).w ; is level SBZ3?
-		bne.s	Level_BgmNotLZ4	; if not, branch
-		moveq	#5,d0		; move 5 to d0
-
-Level_BgmNotLZ4:
-		cmpi.w	#$502,($FFFFFE10).w ; is level FZ?
-		bne.s	Level_PlayBgm	; if not, branch
-		moveq	#6,d0		; move 6 to d0
-
-Level_PlayBgm:
+		move.w	($FFFFFE10).w,d0
+		lsl.b	#6,d0
+		lsr.w	#5,d0
 		lea	(MusicList).l,a1 ; load	music playlist
-		move.b	(a1,d0.w),d0	; add d0 to a1
+		move.w	(a1,d0.w),d0	; add d0 to a1
+		move.w	d0,($FFFFFF90).w
 		bsr.w	PlaySound	; play music
-		move.b	#$34,($FFFFD080).w ; load title	card object
-
+		move.b	#$34,(Object_RAM+$80).w ; load title card object
+		
 Level_TtlCard:
 		move.b	#$C,($FFFFF62A).w
 		bsr.w	DelayProgram
 		jsr	ObjectsLoad
 		jsr	BuildSprites
 		bsr.w	RunPLC_RAM
-		move.w	($FFFFD108).w,d0
-		cmp.w	($FFFFD130).w,d0 ; has title card sequence finished?
+		move.w	(Object_RAM+$108).w,d0
+		cmp.w	(Object_RAM+$130).w,d0 ; has title card sequence finished?
 		bne.s	Level_TtlCard	; if not, branch
 		tst.l	($FFFFF680).w	; are there any	items in the pattern load cue?
 		bne.s	Level_TtlCard	; if yes, branch
@@ -3844,16 +3848,16 @@ loc_3946:
 		bsr.w	PalLoad1	; load Sonic's pallet line
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBgLayer
-		bset	#2,($FFFFF754).w
+		bset	#2,(Camera_RAM+$54).w
 		bsr.w	MainLoadBlockLoad ; load block mappings	and pallets
 		bsr.w	LoadTilesFromStart
 		jsr	FloorLog_Unk
 		bsr.w	ColIndexLoad
 		bsr.w	LZWaterEffects
-		move.b	#1,($FFFFD000).w ; load	Sonic object
+		move.b	#1,(Object_RAM).w ; load	Sonic object
 		tst.w	($FFFFFFF0).w
 		bmi.s	Level_ChkDebug
-		move.b	#$21,($FFFFD040).w ; load HUD object
+		move.b	#$21,(Secondary_Object_RAM).w ; load HUD object
 
 Level_ChkDebug:
 		tst.b	($FFFFFFE2).w	; has debug cheat been entered?
@@ -3867,10 +3871,10 @@ Level_ChkWater:
 		move.w	#0,($FFFFF604).w
 		cmpi.b	#1,($FFFFFE10).w ; is level LZ?
 		bne.s	Level_LoadObj	; if not, branch
-		move.b	#$1B,($FFFFD780).w ; load water	surface	object
-		move.w	#$60,($FFFFD788).w
-		move.b	#$1B,($FFFFD7C0).w
-		move.w	#$120,($FFFFD7C8).w
+		move.b	#$1B,(Object_RAM+$780).w ; load water	surface	object
+		move.w	#$60,(Object_RAM+$788).w
+		move.b	#$1B,(Object_RAM+$7C0).w
+		move.w	#$120,(Object_RAM+$7C8).w
 
 Level_LoadObj:
 		jsr	ObjPosLoad
@@ -3944,10 +3948,10 @@ Level_DelayLoop:
 		bsr.w	Pal_FadeTo2
 		tst.w	($FFFFFFF0).w
 		bmi.s	Level_ClrCardArt
-		addq.b	#2,($FFFFD0A4).w ; make	title card move
-		addq.b	#4,($FFFFD0E4).w
-		addq.b	#4,($FFFFD124).w
-		addq.b	#4,($FFFFD164).w
+		addq.b	#2,(Object_RAM+$A4).w ; make	title card move
+		addq.b	#4,(Object_RAM+$E4).w
+		addq.b	#4,(Object_RAM+$124).w
+		addq.b	#4,(Object_RAM+$164).w
 		bra.s	Level_StartGame
 ; ===========================================================================
 
@@ -3976,7 +3980,7 @@ Level_MainLoop:
 		jsr	ObjectsLoad
 		tst.w	($FFFFFE08).w
 		bne.s	loc_3B10
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	loc_3B14
 
 loc_3B10:
@@ -4047,7 +4051,7 @@ loc_3BC8:
 LZWaterEffects:				; XREF: Level
 		cmpi.b	#1,($FFFFFE10).w ; check if level is LZ
 		bne.s	locret_3C28	; if not, branch
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	LZMoveWater
 		bsr.w	LZWindTunnels
 		bsr.w	LZWaterSlides
@@ -4061,7 +4065,7 @@ LZMoveWater:
 		add.w	($FFFFF648).w,d0
 		move.w	d0,($FFFFF646).w
 		move.w	($FFFFF646).w,d0
-		sub.w	($FFFFF704).w,d0
+		sub.w	(Camera_Vertical_Pos).w,d0
 		bcc.s	loc_3C1A
 		tst.w	d0
 		bpl.s	loc_3C1A
@@ -4117,14 +4121,14 @@ DynWater_Index:	dc.w DynWater_LZ1-DynWater_Index
 ; ===========================================================================
 
 DynWater_LZ1:				; XREF: DynWater_Index
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		move.b	($FFFFF64D).w,d2
 		bne.s	loc_3CD0
 		move.w	#$B8,d1
 		cmpi.w	#$600,d0
 		bcs.s	loc_3CB4
 		move.w	#$108,d1
-		cmpi.w	#$200,($FFFFD00C).w
+		cmpi.w	#$200,(Object_RAM+$0C).w
 		bcs.s	loc_3CBA
 		cmpi.w	#$C00,d0
 		bcs.s	loc_3CB4
@@ -4158,7 +4162,7 @@ loc_3CBA:				; XREF: DynWater_LZ1
 loc_3CD0:				; XREF: DynWater_LZ1
 		subq.b	#1,d2
 		bne.s	locret_3CF4
-		cmpi.w	#$2E0,($FFFFD00C).w
+		cmpi.w	#$2E0,(Object_RAM+$0C).w
 		bcc.s	locret_3CF4
 		move.w	#$3A8,d1
 		cmpi.w	#$1300,d0
@@ -4174,7 +4178,7 @@ locret_3CF4:
 ; ===========================================================================
 
 DynWater_LZ2:				; XREF: DynWater_Index
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		move.w	#$328,d1
 		cmpi.w	#$500,d0
 		bcs.s	loc_3D12
@@ -4189,15 +4193,15 @@ loc_3D12:
 ; ===========================================================================
 
 DynWater_LZ3:				; XREF: DynWater_Index
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		move.b	($FFFFF64D).w,d2
 		bne.s	loc_3D5E
 		move.w	#$900,d1
 		cmpi.w	#$600,d0
 		bcs.s	loc_3D54
-		cmpi.w	#$3C0,($FFFFD00C).w
+		cmpi.w	#$3C0,(Object_RAM+$0C).w
 		bcs.s	loc_3D54
-		cmpi.w	#$600,($FFFFD00C).w
+		cmpi.w	#$600,(Object_RAM+$0C).w
 		bcc.s	loc_3D54
 		move.w	#$4C8,d1
 		move.l	#Level_LZ3,($FFFFA400).w		; MJ: Set normal version of act 3's layout to be read
@@ -4222,9 +4226,9 @@ loc_3D5E:				; XREF: DynWater_LZ3
 		bcs.s	loc_3DA2
 		cmpi.w	#$508,($FFFFF64A).w
 		beq.s	loc_3D8E
-		cmpi.w	#$600,($FFFFD00C).w
+		cmpi.w	#$600,(Object_RAM+$0C).w
 		bcc.s	loc_3D8E
-		cmpi.w	#$280,($FFFFD00C).w
+		cmpi.w	#$280,(Object_RAM+$0C).w
 		bcc.s	loc_3DA2
 
 loc_3D8E:
@@ -4292,7 +4296,7 @@ locret_3E1A:
 
 DynWater_SBZ3:				; XREF: DynWater_Index
 		move.w	#$228,d1
-		cmpi.w	#$F00,($FFFFF700).w
+		cmpi.w	#$F00,(Camera_Horizontal_Pos).w
 		bcs.s	loc_3E2C
 		move.w	#$4C8,d1
 
@@ -4322,7 +4326,7 @@ LZWindTunnels:				; XREF: LZWaterEffects
 		subq.w	#8,a2
 
 loc_3E56:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 
 LZWind_Loop:
 		move.w	8(a1),d0
@@ -4406,7 +4410,7 @@ LZWind_Data:	dc.w $F80, $100, $1410,	$180, $460, $400, $710,	$480, $A20
 
 
 LZWaterSlides:				; XREF: LZWaterEffects
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		btst	#1,$22(a1)
 		bne.s	loc_3F6A
 		move.w	$0C(a1),d0				; MJ: Load Y position
@@ -4650,7 +4654,7 @@ Osc_Data:	dc.w $7C, $80		; baseline values
 
 
 OscillateNumDo:				; XREF: Level
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	locret_41C4
 		lea	($FFFFFE5E).w,a1
 		lea	(Osc_Data2).l,a2
@@ -4767,16 +4771,16 @@ SignpostArtLoad:			; XREF: Level
 		bne.w	Signpost_Exit	; if yes, branch
 		cmpi.b	#2,($FFFFFE11).w ; is act number 02 (act 3)?
 		beq.s	Signpost_Exit	; if yes, branch
-		move.w	($FFFFF700).w,d0
-		move.w	($FFFFF72A).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d0
+		move.w	(Camera_RAM+$2A).w,d1
 		subi.w	#$100,d1
 		cmp.w	d1,d0		; has Sonic reached the	edge of	the level?
 		blt.s	Signpost_Exit	; if not, branch
 		tst.b	($FFFFFE1E).w
 		beq.s	Signpost_Exit
-		cmp.w	($FFFFF728).w,d1
+		cmp.w	(Camera_RAM+$28).w,d1
 		beq.s	Signpost_Exit
-		move.w	d1,($FFFFF728).w ; move	left boundary to current screen	position
+		move.w	d1,(Camera_RAM+$28).w ; move	left boundary to current screen	position
 		moveq	#$12,d0
 		bra.w	LoadPLC2	; load signpost	patterns
 ; ===========================================================================
@@ -4826,7 +4830,7 @@ loc_463C:
 		bsr.w	SS_BGLoad
 		moveq	#$14,d0
 		bsr.w	RunPLC_ROM	; load special stage patterns
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -4834,7 +4838,7 @@ SS_ClrObjRam:
 		move.l	d0,(a1)+
 		dbf	d1,SS_ClrObjRam	; clear	the object RAM
 
-		lea	($FFFFF700).w,a1
+		lea	(Special_Stage_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$3F,d1
 
@@ -4863,9 +4867,9 @@ SS_ClrNemRam:
 		moveq	#$A,d0
 		bsr.w	PalLoad1	; load special stage pallet
 		jsr	SS_Load
-		move.l	#0,($FFFFF700).w
-		move.l	#0,($FFFFF704).w
-		move.b	#9,($FFFFD000).w ; load	special	stage Sonic object
+		move.l	#0,(Special_Stage_RAM).w
+		move.l	#0,(Camera_Vertical_Pos).w
+		move.b	#9,(Object_RAM).w ; load	special	stage Sonic object
 		bsr.w	PalCycle_SS
 		clr.w	($FFFFF780).w	; set stage angle to "upright"
 		move.w	#$40,($FFFFF782).w ; set stage rotation	speed
@@ -4971,7 +4975,7 @@ loc_47D4:
 		move.w	d0,($FFFFF7D4).w ; set rings bonus
 		move.w	#$8E,d0
 		jsr	(PlaySound_Special).l ;	play end-of-level music
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -4979,7 +4983,7 @@ SS_EndClrObjRam:
 		move.l	d0,(a1)+
 		dbf	d1,SS_EndClrObjRam ; clear object RAM
 
-		move.b	#$7E,($FFFFD5C0).w ; load results screen object
+		move.b	#$7E,(Object_RAM+$5C0).w ; load results screen object
 
 SS_NormalExit:
 		bsr.w	PauseGame
@@ -5195,21 +5199,21 @@ Pal_SSCyc2:	incbin	pallet\c_ss_2.bin
 SS_BGAnimate:				; XREF: SpecialStage
 		move.w	($FFFFF7A0).w,d0
 		bne.s	loc_4BF6
-		move.w	#0,($FFFFF70C).w
-		move.w	($FFFFF70C).w,($FFFFF618).w
+		move.w	#0,(Special_Stage_RAM+$0C).w
+		move.w	(Special_Stage_RAM+$0C).w,($FFFFF618).w
 
 loc_4BF6:
 		cmpi.w	#8,d0
 		bcc.s	loc_4C4E
 		cmpi.w	#6,d0
 		bne.s	loc_4C10
-		addq.w	#1,($FFFFF718).w
-		addq.w	#1,($FFFFF70C).w
-		move.w	($FFFFF70C).w,($FFFFF618).w
+		addq.w	#1,(Special_Stage_RAM+$18).w
+		addq.w	#1,(Special_Stage_RAM+$0C).w
+		move.w	(Special_Stage_RAM+$0C).w,($FFFFF618).w
 
 loc_4C10:
 		moveq	#0,d0
-		move.w	($FFFFF708).w,d0
+		move.w	(Special_Stage_RAM+$08).w,d0
 		neg.w	d0
 		swap	d0
 		lea	(byte_4CCC).l,a1
@@ -5236,7 +5240,7 @@ loc_4C26:
 loc_4C4E:				; XREF: SS_BGAnimate
 		cmpi.w	#$C,d0
 		bne.s	loc_4C74
-		subq.w	#1,($FFFFF718).w
+		subq.w	#1,(Special_Stage_RAM+$18).w
 		lea	($FFFFAB00).w,a3
 		move.l	#$18000,d2
 		moveq	#6,d1
@@ -5253,13 +5257,13 @@ loc_4C74:
 		lea	(byte_4CC4).l,a2
 
 loc_4C7E:
-		lea	($FFFFCC00).w,a1
-		move.w	($FFFFF718).w,d0
+		lea	(Horiz_Scroll_Buf).w,a1
+		move.w	(Special_Stage_RAM+$18).w,d0
 		neg.w	d0
 		swap	d0
 		moveq	#0,d3
 		move.b	(a2)+,d3
-		move.w	($FFFFF70C).w,d2
+		move.w	(Special_Stage_RAM+$0C).w,d2
 		neg.w	d2
 		andi.w	#$FF,d2
 		lsl.w	#2,d2
@@ -5304,7 +5308,7 @@ ContinueScreen:				; XREF: GameModeArray
 		move.w	#$8004,(a6)
 		move.w	#$8700,(a6)
 		bsr.w	ClearScreen
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -5328,15 +5332,15 @@ Cont_ClrObjRam:
 		move.b	#$90,d0
 		bsr.w	PlaySound	; play continue	music
 		move.w	#659,($FFFFF614).w ; set time delay to 11 seconds
-		clr.l	($FFFFF700).w
-		move.l	#$1000000,($FFFFF704).w
-		move.b	#$81,($FFFFD000).w ; load Sonic	object
-		move.b	#$80,($FFFFD040).w ; load continue screen objects
-		move.b	#$80,($FFFFD080).w
-		move.b	#3,($FFFFD098).w
-		move.b	#4,($FFFFD09A).w
-		move.b	#$80,($FFFFD0C0).w
-		move.b	#4,($FFFFD0E4).w
+		clr.l	(Camera_Horizontal_Pos).w
+		move.l	#$1000000,(Camera_Vertical_Pos).w
+		move.b	#$81,(Object_RAM).w ; load Sonic	object
+		move.b	#$80,(Secondary_Object_RAM).w ; load continue screen objects
+		move.b	#$80,(Object_RAM+$80).w
+		move.b	#3,(Object_RAM+$98).w
+		move.b	#4,(Object_RAM+$9A).w
+		move.b	#$80,(Object_RAM+$C0).w
+		move.b	#4,(Object_RAM+$E4).w
 		jsr	ObjectsLoad
 		jsr	BuildSprites
 		move.w	($FFFFF60C).w,d0
@@ -5351,7 +5355,7 @@ Cont_ClrObjRam:
 Cont_MainLoop:
 		move.b	#$16,($FFFFF62A).w
 		bsr.w	DelayProgram
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	loc_4DF2
 		move	#$2700,sr
 		move.w	($FFFFF614).w,d1
@@ -5363,9 +5367,9 @@ Cont_MainLoop:
 loc_4DF2:
 		jsr	ObjectsLoad
 		jsr	BuildSprites
-		cmpi.w	#$180,($FFFFD008).w ; has Sonic	run off	screen?
+		cmpi.w	#$180,(Object_RAM+$08).w ; has Sonic	run off	screen?
 		bcc.s	Cont_GotoLevel	; if yes, branch
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	Cont_MainLoop
 		tst.w	($FFFFF614).w
 		bne.w	Cont_MainLoop
@@ -5462,12 +5466,12 @@ loc_4EEA:
 Obj80_ChkType:				; XREF: Obj80_Index
 		tst.b	$28(a0)
 		beq.s	loc_4F40
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcs.s	loc_4F40
 		move.b	($FFFFFE0F).w,d0
 		andi.b	#1,d0
 		bne.s	loc_4F40
-		tst.w	($FFFFD010).w
+		tst.w	(Object_RAM+$10).w
 		bne.s	Obj80_Delete
 		rts	
 ; ===========================================================================
@@ -5581,7 +5585,7 @@ EndingSequence:				; XREF: GameModeArray
 		move.b	#$E4,d0
 		bsr.w	PlaySound_Special ; stop music
 		bsr.w	Pal_FadeFrom
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -5597,7 +5601,7 @@ End_ClrRam:
 		move.l	d0,(a1)+
 		dbf	d1,End_ClrRam	; clear	variables
 
-		lea	($FFFFF700).w,a1
+		lea	(Camera_Horizontal_Pos).w,a1
 		moveq	#0,d0
 		move.w	#$3F,d1
 
@@ -5640,7 +5644,7 @@ End_LoadData:
 		jsr	Hud_Base
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBgLayer
-		bset	#2,($FFFFF754).w
+		bset	#2,(Camera_RAM+$54).w
 		bsr.w	MainLoadBlockLoad
 		bsr.w	LoadTilesFromStart
 	;	move.l	#Col_GHZ,($FFFFF796).w ; load collision	index
@@ -5648,7 +5652,7 @@ End_LoadData:
 		move.l	#Col_GHZ_2,($FFFFFFD4).w			; MJ: Set second collision for ending
 		move	#$2300,sr
 		lea	(Kos_EndFlowers).l,a0 ;	load extra flower patterns
-		lea	($FFFF9400).w,a1 ; RAM address to buffer the patterns
+		lea	(Block_RAM-$1000).w,a1 ; RAM address to buffer the patterns
 		bsr.w	KosDec
 		moveq	#3,d0
 		bsr.w	PalLoad1	; load Sonic's pallet
@@ -5659,12 +5663,12 @@ End_LoadData:
 		move.b	#1,($FFFFFFFA).w ; enable debug	mode
 
 End_LoadSonic:
-		move.b	#1,($FFFFD000).w ; load	Sonic object
-		bset	#0,($FFFFD022).w ; make	Sonic face left
+		move.b	#1,(Object_RAM).w ; loadSonic object
+		bset	#0,(Object_RAM+$22).w ; make Sonic face left
 		move.b	#1,($FFFFF7CC).w ; lock	controls
 		move.w	#$400,($FFFFF602).w ; move Sonic to the	left
-		move.w	#$F800,($FFFFD014).w ; set Sonic's speed
-		move.b	#$21,($FFFFD040).w ; load HUD object
+		move.w	#$F800,(Object_RAM+$14).w ; set Sonic's speed
+		move.b	#$21,(Secondary_Object_RAM).w ; load HUD object
 		jsr	ObjPosLoad
 		jsr	ObjectsLoad
 		jsr	BuildSprites
@@ -5750,7 +5754,7 @@ loc_5334:
 		move.w	#$2E2F,($FFFFA480).w ; modify level layout
 		lea	($C00004).l,a5
 		lea	($C00000).l,a6
-		lea	($FFFFF700).w,a3
+		lea	(Camera_Horizontal_Pos).w,a3
 		movea.l	($FFFFA400).w,a4			; MJ: Load address of layout
 		move.w	#$4000,d2
 		bsr.w	LoadTilesFromStart2
@@ -5769,7 +5773,7 @@ loc_5334:
 End_MoveSonic:				; XREF: End_MainLoop
 		move.b	($FFFFF7D7).w,d0
 		bne.s	End_MoveSonic2
-		cmpi.w	#$90,($FFFFD008).w ; has Sonic passed $90 on y-axis?
+		cmpi.w	#$90,(Object_RAM+$08).w ; has Sonic passed $90 on y-axis?
 		bcc.s	End_MoveSonExit	; if not, branch
 		addq.b	#2,($FFFFF7D7).w
 		move.b	#1,($FFFFF7CC).w ; lock	player's controls
@@ -5780,17 +5784,17 @@ End_MoveSonic:				; XREF: End_MainLoop
 End_MoveSonic2:				; XREF: End_MoveSonic
 		subq.b	#2,d0
 		bne.s	End_MoveSonic3
-		cmpi.w	#$A0,($FFFFD008).w ; has Sonic passed $A0 on y-axis?
+		cmpi.w	#$A0,(Object_RAM+$08).w ; has Sonic passed $A0 on y-axis?
 		bcs.s	End_MoveSonExit	; if not, branch
 		addq.b	#2,($FFFFF7D7).w
 		moveq	#0,d0
 		move.b	d0,($FFFFF7CC).w
 		move.w	d0,($FFFFF602).w ; stop	Sonic moving
-		move.w	d0,($FFFFD014).w
+		move.w	d0,(Object_RAM+$14).w
 		move.b	#$81,($FFFFF7C8).w
-		move.b	#3,($FFFFD01A).w
-		move.w	#$505,($FFFFD01C).w ; use "standing" animation
-		move.b	#3,($FFFFD01E).w
+		move.b	#3,(Object_RAM+$1A).w
+		move.w	#$505,(Object_RAM+$1C).w ; use "standing" animation
+		move.b	#3,(Object_RAM+$1E).w
 		rts	
 ; ===========================================================================
 
@@ -5798,9 +5802,9 @@ End_MoveSonic3:				; XREF: End_MoveSonic
 		subq.b	#2,d0
 		bne.s	End_MoveSonExit
 		addq.b	#2,($FFFFF7D7).w
-		move.w	#$A0,($FFFFD008).w
-		move.b	#$87,($FFFFD000).w ; load Sonic	ending sequence	object
-		clr.w	($FFFFD024).w
+		move.w	#$A0,(Object_RAM+$08).w
+		move.b	#$87,(Object_RAM).w ; load Sonic	ending sequence	object
+		clr.w	(Object_RAM+$24).w
 
 End_MoveSonExit:
 		rts	
@@ -5848,7 +5852,7 @@ Obj87_MakeEmlds:			; XREF: Obj87_Index
 		bne.s	Obj87_Wait
 		addq.b	#2,$25(a0)
 		move.w	#1,$1C(a0)
-		move.b	#$88,($FFFFD400).w ; load chaos	emeralds objects
+		move.b	#$88,(Object_RAM+$400).w ; load chaos	emeralds objects
 
 Obj87_Wait:
 		rts	
@@ -5868,7 +5872,7 @@ locret_5480:
 Obj87_ClrObjRam:			; XREF: Obj87_Index
 		subq.w	#1,$30(a0)
 		bne.s	Obj87_Wait2
-		lea	($FFFFD400).w,a1
+		lea	(Object_RAM+$400).w,a1
 		move.w	#$FF,d1
 
 Obj87_ClrLoop:
@@ -5889,7 +5893,7 @@ Obj87_MakeLogo:				; XREF: Obj87_Index
 		addq.b	#2,$25(a0)
 		move.w	#$B4,$30(a0)
 		move.b	#2,$1C(a0)
-		move.b	#$89,($FFFFD400).w ; load "SONIC THE HEDGEHOG" object
+		move.b	#$89,(Object_RAM+$400).w ; load "SONIC THE HEDGEHOG" object
 
 Obj87_Wait3:
 		rts	
@@ -5911,7 +5915,7 @@ Obj87_Leap:				; XREF: Obj87_Index
 		move.b	#2,$18(a0)
 		move.b	#5,$1A(a0)
 		move.b	#2,$1C(a0)	; use "leaping"	animation
-		move.b	#$89,($FFFFD400).w ; load "SONIC THE HEDGEHOG" object
+		move.b	#$89,(Object_RAM+$400).w ; load "SONIC THE HEDGEHOG" object
 		bra.s	Obj87_Animate
 ; ===========================================================================
 
@@ -5938,15 +5942,15 @@ Obj88_Index:	dc.w Obj88_Main-Obj88_Index
 ; ===========================================================================
 
 Obj88_Main:				; XREF: Obj88_Index
-		cmpi.b	#2,($FFFFD01A).w
+		cmpi.b	#2,(Object_RAM+$1A).w
 		beq.s	Obj88_Main2
 		addq.l	#4,sp
 		rts	
 ; ===========================================================================
 
 Obj88_Main2:				; XREF: Obj88_Main
-		move.w	($FFFFD008).w,8(a0) ; match X position with Sonic
-		move.w	($FFFFD00C).w,$C(a0) ; match Y position	with Sonic
+		move.w	(Object_RAM+$08).w,8(a0) ; match X position with Sonic
+		move.w	(Object_RAM+$0C).w,$C(a0) ; match Y position	with Sonic
 		movea.l	a0,a1
 		moveq	#0,d3
 		moveq	#1,d2
@@ -6080,7 +6084,7 @@ Credits:				; XREF: GameModeArray
 		move.w	#$8720,(a6)
 		clr.b	($FFFFF64E).w
 		bsr.w	ClearScreen
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -6101,7 +6105,7 @@ Cred_ClrPallet:
 
 		moveq	#3,d0
 		bsr.w	PalLoad1	; load Sonic's pallet
-		move.b	#$8A,($FFFFD080).w ; load credits object
+		move.b	#$8A,(Object_RAM+$80).w ; load credits object
 		jsr	ObjectsLoad
 		jsr	BuildSprites
 		bsr.w	EndingDemoLoad
@@ -6205,7 +6209,7 @@ TryAgainEnd:				; XREF: Credits
 		move.w	#$8720,(a6)
 		clr.b	($FFFFF64E).w
 		bsr.w	ClearScreen
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.w	#$7FF,d1
 
@@ -6226,7 +6230,7 @@ TryAg_ClrPallet:
 		moveq	#$13,d0
 		bsr.w	PalLoad1	; load ending pallet
 		clr.w	($FFFFFBC0).w
-		move.b	#$8B,($FFFFD080).w ; load Eggman object
+		move.b	#$8B,(Object_RAM+$80).w ; load Eggman object
 		jsr	ObjectsLoad
 		jsr	BuildSprites
 		move.w	#1800,($FFFFF614).w ; show screen for 30 seconds
@@ -6281,9 +6285,9 @@ Obj8B_Main:				; XREF: Obj8B_Index
 		move.b	#2,$1C(a0)	; use "END" animation
 		cmpi.b	#6,($FFFFFE57).w ; do you have all 6 emeralds?
 		beq.s	Obj8B_Animate	; if yes, branch
-		move.b	#$8A,($FFFFD0C0).w ; load credits object
+		move.b	#$8A,(Object_RAM+$C0).w ; load credits object
 		move.w	#9,($FFFFFFF4).w ; use "TRY AGAIN" text
-		move.b	#$8C,($FFFFD800).w ; load emeralds object on "TRY AGAIN" screen
+		move.b	#$8C,(Object_RAM+$800).w ; load emeralds object on "TRY AGAIN" screen
 		move.b	#0,$1C(a0)	; use "TRY AGAIN" animation
 
 Obj8B_Animate:				; XREF: Obj8B_Index
@@ -6299,7 +6303,7 @@ Obj8B_Juggle:				; XREF: Obj8B_Index
 		neg.w	d0
 
 loc_5A6A:
-		lea	($FFFFD800).w,a1
+		lea	(Object_RAM+$800).w,a1
 		moveq	#5,d1
 
 loc_5A70:
@@ -6461,11 +6465,11 @@ Demo_EndGHZ2:	incbin	demodata\e_ghz2.bin
 
 LevelSizeLoad:				; XREF: TitleScreen; Level; EndingSequence
 		moveq	#0,d0
-		move.b	d0,($FFFFF740).w
-		move.b	d0,($FFFFF741).w
-		move.b	d0,($FFFFF746).w
-		move.b	d0,($FFFFF748).w
-		move.b	d0,($FFFFF742).w
+		move.b	d0,(Camera_RAM+$40).w
+		move.b	d0,(Camera_RAM+$41).w
+		move.b	d0,(Camera_RAM+$46).w
+		move.b	d0,(Camera_RAM+$48).w
+		move.b	d0,(Camera_RAM+$42).w
 		move.w	($FFFFFE10).w,d0
 		lsl.b	#6,d0
 		lsr.w	#4,d0
@@ -6474,19 +6478,19 @@ LevelSizeLoad:				; XREF: TitleScreen; Level; EndingSequence
 		add.w	d1,d0
 		lea	LevelSizeArray(pc,d0.w),a0 ; load level	boundaries
 		move.w	(a0)+,d0
-		move.w	d0,($FFFFF730).w
+		move.w	d0,(Camera_RAM+$30).w
 		move.l	(a0)+,d0
-		move.l	d0,($FFFFF728).w
-		move.l	d0,($FFFFF720).w
+		move.l	d0,(Camera_RAM+$28).w
+		move.l	d0,(Camera_RAM+$20).w
 		move.l	(a0)+,d0
-		move.l	d0,($FFFFF72C).w
-		move.l	d0,($FFFFF724).w
-		move.w	($FFFFF728).w,d0
+		move.l	d0,(Camera_RAM+$2C).w
+		move.l	d0,(Camera_RAM+$24).w
+		move.w	(Camera_RAM+$28).w,d0
 		addi.w	#$240,d0
-		move.w	d0,($FFFFF732).w
-		move.w	#$1010,($FFFFF74A).w
+		move.w	d0,(Camera_RAM+$32).w
+		move.w	#$1010,(Camera_RAM+$4A).w
 		move.w	(a0)+,d0
-		move.w	d0,($FFFFF73E).w
+		move.w	d0,(Camera_RAM+$3E).w
 		bra.w	LevSz_ChkLamp
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -6505,8 +6509,8 @@ LevSz_ChkLamp:				; XREF: LevelSizeLoad
 		tst.b	($FFFFFE30).w	; have any lampposts been hit?
 		beq.s	LevSz_StartLoc	; if not, branch
 		jsr	Obj79_LoadInfo
-		move.w	($FFFFD008).w,d1
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$08).w,d1
+		move.w	(Object_RAM+$0C).w,d0
 		bra.s	loc_60D0
 ; ===========================================================================
 
@@ -6526,18 +6530,18 @@ LevSz_StartLoc:				; XREF: LevelSizeLoad
 LevSz_SonicPos:
 		moveq	#0,d1
 		move.w	(a1)+,d1
-		move.w	d1,($FFFFD008).w ; set Sonic's position on x-axis
+		move.w	d1,(Object_RAM+$08).w ; set Sonic's position on x-axis
 		moveq	#0,d0
 		move.w	(a1),d0
-		move.w	d0,($FFFFD00C).w ; set Sonic's position on y-axis
+		move.w	d0,(Object_RAM+$0C).w ; set Sonic's position on y-axis
 		move.b	($FFFFF600).w,d2			; MJ: load game mode
 		andi.w	#$00FC,d2				; MJ: keep in range
 		cmpi.b	#$04,d2					; MJ: is screen mode at title?
 		bne	loc_60D0				; MJ: if not, branch
 		move.w	#$0050,d1				; MJ: set positions for title screen
 		move.w	#$03B0,d0				; MJ: ''
-		move.w	d1,($FFFFD008).w			; MJ: save to object 1 so title screen follows
-		move.w	d0,($FFFFD00C).w			; MJ: ''
+		move.w	d1,(Object_RAM+$08).w			; MJ: save to object 1 so title screen follows
+		move.w	d0,(Object_RAM+$0C).w			; MJ: ''
 
 loc_60D0:				; XREF: LevSz_ChkLamp
 		subi.w	#$A0,d1
@@ -6545,24 +6549,24 @@ loc_60D0:				; XREF: LevSz_ChkLamp
 		moveq	#0,d1
 
 loc_60D8:
-		move.w	($FFFFF72A).w,d2
+		move.w	(Camera_RAM+$2A).w,d2
 		cmp.w	d2,d1
 		bcs.s	loc_60E2
 		move.w	d2,d1
 
 loc_60E2:
-		move.w	d1,($FFFFF700).w
+		move.w	d1,(Camera_Horizontal_Pos).w
 		subi.w	#$60,d0
 		bcc.s	loc_60EE
 		moveq	#0,d0
 
 loc_60EE:
-		cmp.w	($FFFFF72E).w,d0
+		cmp.w	(Camera_RAM+$2E).w,d0
 		blt.s	loc_60F8
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 
 loc_60F8:
-		move.w	d0,($FFFFF704).w
+		move.w	d0,(Camera_Vertical_Pos).w
 		bsr.w	BgScrollSpeed
 		moveq	#0,d0
 		move.b	($FFFFFE10).w,d0
@@ -6647,11 +6651,11 @@ dword_61B4:	dc.l $700100, $1000100
 BgScrollSpeed:				; XREF: LevelSizeLoad
 		tst.b	($FFFFFE30).w
 		bne.s	loc_6206
-		move.w	d0,($FFFFF70C).w
-		move.w	d0,($FFFFF714).w
-		move.w	d1,($FFFFF708).w
-		move.w	d1,($FFFFF710).w
-		move.w	d1,($FFFFF718).w
+		move.w	d0,(Camera_RAM+$0C).w
+		move.w	d0,(Camera_RAM+$14).w
+		move.w	d1,(Camera_RAM+$08).w
+		move.w	d1,(Camera_RAM+$10).w
+		move.w	d1,(Camera_RAM+$18).w
 
 loc_6206:
 		moveq	#0,d2
@@ -6674,7 +6678,7 @@ BgScroll_GHZ:				; XREF: BgScroll_Index
 
 BgScroll_LZ:				; XREF: BgScroll_Index
 		asr.l	#1,d0
-		move.w	d0,($FFFFF70C).w
+		move.w	d0,(Camera_RAM+$0C).w
 		rts	
 ; ===========================================================================
 
@@ -6685,7 +6689,7 @@ BgScroll_MZ:				; XREF: BgScroll_Index
 BgScroll_SLZ:				; XREF: BgScroll_Index
 		asr.l	#1,d0
 		addi.w	#$C0,d0
-		move.w	d0,($FFFFF70C).w
+		move.w	d0,(Camera_RAM+$0C).w
 		rts	
 ; ===========================================================================
 
@@ -6695,8 +6699,8 @@ BgScroll_SYZ:				; XREF: BgScroll_Index
 		asl.l	#1,d0
 		add.l	d2,d0
 		asr.l	#8,d0
-		move.w	d0,($FFFFF70C).w
-		move.w	d0,($FFFFF714).w
+		move.w	d0,(Camera_RAM+$0C).w
+		move.w	d0,(Camera_RAM+$14).w
 		rts	
 ; ===========================================================================
 
@@ -6704,19 +6708,19 @@ BgScroll_SBZ:				; XREF: BgScroll_Index
 		asl.l	#4,d0
 		asl.l	#1,d0
 		asr.l	#8,d0
-		move.w	d0,($FFFFF70C).w
+		move.w	d0,(Camera_RAM+$0C).w
 		rts	
 ; ===========================================================================
 
 BgScroll_End:				; XREF: BgScroll_Index
-		move.w	#$1E,($FFFFF70C).w
-		move.w	#$1E,($FFFFF714).w
+		move.w	#$1E,(Camera_RAM+$0C).w
+		move.w	#$1E,(Camera_RAM+$14).w
 		rts	
 ; ===========================================================================
-		move.w	#$A8,($FFFFF708).w
-		move.w	#$1E,($FFFFF70C).w
-		move.w	#-$40,($FFFFF710).w
-		move.w	#$1E,($FFFFF714).w
+		move.w	#$A8,(Camera_RAM+$08).w
+		move.w	#$1E,(Camera_RAM+$0C).w
+		move.w	#-$40,(Camera_RAM+$10).w
+		move.w	#$1E,(Camera_RAM+$14).w
 		rts
 
 ; ---------------------------------------------------------------------------
@@ -6727,25 +6731,25 @@ BgScroll_End:				; XREF: BgScroll_Index
 
 
 DeformBgLayer:				; XREF: TitleScreen; Level; EndingSequence
-		tst.b	($FFFFF744).w
+		tst.b	(Camera_RAM+$44).w
 		beq.s	loc_628E
 		rts	
 ; ===========================================================================
 
 loc_628E:
-		clr.w	($FFFFF754).w
-		clr.w	($FFFFF756).w
-		clr.w	($FFFFF758).w
-		clr.w	($FFFFF75A).w
+		clr.w	(Camera_RAM+$54).w
+		clr.w	(Camera_RAM+$56).w
+		clr.w	(Camera_RAM+$58).w
+		clr.w	(Camera_RAM+$5A).w
 		bsr.w	ScrollHoriz
 		bsr.w	ScrollVertical
 		bsr.w	DynScrResizeLoad
-		move.w	($FFFFF700).w,($FFFFF61A).w
-		move.w	($FFFFF704).w,($FFFFF616).w
-		move.w	($FFFFF708).w,($FFFFF61C).w
-		move.w	($FFFFF70C).w,($FFFFF618).w
-		move.w	($FFFFF718).w,($FFFFF620).w
-		move.w	($FFFFF71C).w,($FFFFF61E).w
+		move.w	(Camera_Horizontal_Pos).w,($FFFFF61A).w
+		move.w	(Camera_Vertical_Pos).w,($FFFFF616).w
+		move.w	(Camera_RAM+$08).w,($FFFFF61C).w
+		move.w	(Camera_RAM+$0C).w,($FFFFF618).w
+		move.w	(Camera_RAM+$18).w,($FFFFF620).w
+		move.w	(Camera_RAM+$1C).w,($FFFFF61E).w
 		moveq	#0,d0
 		move.b	($FFFFFE10).w,d0
 		add.w	d0,d0
@@ -6769,7 +6773,7 @@ Deform_Index:	dc.w Deform_GHZ-Deform_Index, Deform_LZ-Deform_Index
 
 
 Deform_GHZ:				; XREF: Deform_Index
-		move.w	($FFFFF73A).w,d4
+		move.w	(Camera_RAM+$3A).w,d4
 		ext.l	d4
 		asl.l	#5,d4
 		move.l	d4,d1
@@ -6778,19 +6782,19 @@ Deform_GHZ:				; XREF: Deform_Index
 		moveq	#0,d5
 		bsr.w	ScrollBlock1
 		bsr.w	ScrollBlock4
-		lea	($FFFFCC00).w,a1
-		move.w	($FFFFF704).w,d0
+		lea	(Horiz_Scroll_Buf).w,a1
+		move.w	(Camera_Vertical_Pos).w,d0
 		andi.w	#$7FF,d0
 		lsr.w	#5,d0
 		neg.w	d0
 		addi.w	#$26,d0
-		move.w	d0,($FFFFF714).w
+		move.w	d0,(Camera_RAM+$14).w
 		move.w	d0,d4
 		bsr.w	ScrollBlock3
-		move.w	($FFFFF70C).w,($FFFFF618).w
+		move.w	(Camera_RAM+$0C).w,($FFFFF618).w
 		move.w	#$6F,d1
 		sub.w	d4,d1
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		cmpi.b	#4,($FFFFF600).w
 		bne.s	loc_633C
 		moveq	#0,d0
@@ -6798,22 +6802,22 @@ Deform_GHZ:				; XREF: Deform_Index
 loc_633C:
 		neg.w	d0
 		swap	d0
-		move.w	($FFFFF708).w,d0
+		move.w	(Camera_RAM+$08).w,d0
 		neg.w	d0
 
 loc_6346:
 		move.l	d0,(a1)+
 		dbf	d1,loc_6346
 		move.w	#$27,d1
-		move.w	($FFFFF710).w,d0
+		move.w	(Camera_RAM+$10).w,d0
 		neg.w	d0
 
 loc_6356:
 		move.l	d0,(a1)+
 		dbf	d1,loc_6356
-		move.w	($FFFFF710).w,d0
+		move.w	(Camera_RAM+$10).w,d0
 		addi.w	#0,d0
-		move.w	($FFFFF700).w,d2
+		move.w	(Camera_Horizontal_Pos).w,d2
 		addi.w	#-$200,d2
 		sub.w	d0,d2
 		ext.l	d2
@@ -6845,27 +6849,27 @@ loc_6384:
 
 
 Deform_LZ:				; XREF: Deform_Index
-		move.w	($FFFFF73A).w,d4
+		move.w	(Camera_RAM+$3A).w,d4
 		ext.l	d4
 		asl.l	#7,d4
-		move.w	($FFFFF73C).w,d5
+		move.w	(Camera_RAM+$3C).w,d5
 		ext.l	d5
 		asl.l	#7,d5
 		bsr.w	ScrollBlock1
-		move.w	($FFFFF70C).w,($FFFFF618).w
-		lea	($FFFFCC00).w,a1
+		move.w	(Camera_RAM+$0C).w,($FFFFF618).w
+		lea	(Horiz_Scroll_Buf).w,a1
 		move.w	#$DF,d1
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		neg.w	d0
 		swap	d0
-		move.w	($FFFFF708).w,d0
+		move.w	(Camera_RAM+$08).w,d0
 		neg.w	d0
 
 loc_63C6:
 		move.l	d0,(a1)+
 		dbf	d1,loc_63C6
 		move.w	($FFFFF646).w,d0
-		sub.w	($FFFFF704).w,d0
+		sub.w	(Camera_Vertical_Pos).w,d0
 		rts	
 ; End of function Deform_LZ
 
@@ -6877,7 +6881,7 @@ loc_63C6:
 
 
 Deform_MZ:				; XREF: Deform_Index
-		move.w	($FFFFF73A).w,d4
+		move.w	(Camera_RAM+$3A).w,d4
 		ext.l	d4
 		asl.l	#6,d4
 		move.l	d4,d1
@@ -6886,7 +6890,7 @@ Deform_MZ:				; XREF: Deform_Index
 		moveq	#0,d5
 		bsr.w	ScrollBlock1
 		move.w	#$200,d0
-		move.w	($FFFFF704).w,d1
+		move.w	(Camera_Vertical_Pos).w,d1
 		subi.w	#$1C8,d1
 		bcs.s	loc_6402
 		move.w	d1,d2
@@ -6896,15 +6900,15 @@ Deform_MZ:				; XREF: Deform_Index
 		add.w	d1,d0
 
 loc_6402:
-		move.w	d0,($FFFFF714).w
+		move.w	d0,(Camera_RAM+$14).w
 		bsr.w	ScrollBlock3
-		move.w	($FFFFF70C).w,($FFFFF618).w
-		lea	($FFFFCC00).w,a1
+		move.w	(Camera_RAM+$0C).w,($FFFFF618).w
+		lea	(Horiz_Scroll_Buf).w,a1
 		move.w	#$DF,d1
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		neg.w	d0
 		swap	d0
-		move.w	($FFFFF708).w,d0
+		move.w	(Camera_RAM+$08).w,d0
 		neg.w	d0
 
 loc_6426:
@@ -6921,25 +6925,25 @@ loc_6426:
 
 
 Deform_SLZ:				; XREF: Deform_Index
-		move.w	($FFFFF73A).w,d4
+		move.w	(Camera_RAM+$3A).w,d4
 		ext.l	d4
 		asl.l	#7,d4
-		move.w	($FFFFF73C).w,d5
+		move.w	(Camera_RAM+$3C).w,d5
 		ext.l	d5
 		asl.l	#7,d5
 		bsr.w	ScrollBlock2
-		move.w	($FFFFF70C).w,($FFFFF618).w
+		move.w	(Camera_RAM+$0C).w,($FFFFF618).w
 		bsr.w	Deform_SLZ_2
 		lea	($FFFFA800).w,a2
-		move.w	($FFFFF70C).w,d0
+		move.w	(Camera_RAM+$0C).w,d0
 		move.w	d0,d2
 		subi.w	#$C0,d0
 		andi.w	#$3F0,d0
 		lsr.w	#3,d0
 		lea	(a2,d0.w),a2
-		lea	($FFFFCC00).w,a1
+		lea	(Horiz_Scroll_Buf).w,a1
 		move.w	#$E,d1
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		neg.w	d0
 		swap	d0
 		andi.w	#$F,d2
@@ -6978,7 +6982,7 @@ loc_6482:
 
 Deform_SLZ_2:				; XREF: Deform_SLZ
 		lea	($FFFFA800).w,a1
-		move.w	($FFFFF700).w,d2
+		move.w	(Camera_Horizontal_Pos).w,d2
 		neg.w	d2
 		move.w	d2,d0
 		asr.w	#3,d0
@@ -7031,23 +7035,23 @@ loc_64FE:
 
 
 Deform_SYZ:				; XREF: Deform_Index
-		move.w	($FFFFF73A).w,d4
+		move.w	(Camera_RAM+$3A).w,d4
 		ext.l	d4
 		asl.l	#6,d4
-		move.w	($FFFFF73C).w,d5
+		move.w	(Camera_RAM+$3C).w,d5
 		ext.l	d5
 		asl.l	#4,d5
 		move.l	d5,d1
 		asl.l	#1,d5
 		add.l	d1,d5
 		bsr.w	ScrollBlock1
-		move.w	($FFFFF70C).w,($FFFFF618).w
-		lea	($FFFFCC00).w,a1
+		move.w	(Camera_RAM+$0C).w,($FFFFF618).w
+		lea	(Horiz_Scroll_Buf).w,a1
 		move.w	#$DF,d1
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		neg.w	d0
 		swap	d0
-		move.w	($FFFFF708).w,d0
+		move.w	(Camera_RAM+$08).w,d0
 		neg.w	d0
 
 loc_653C:
@@ -7064,21 +7068,21 @@ loc_653C:
 
 
 Deform_SBZ:				; XREF: Deform_Index
-		move.w	($FFFFF73A).w,d4
+		move.w	(Camera_RAM+$3A).w,d4
 		ext.l	d4
 		asl.l	#6,d4
-		move.w	($FFFFF73C).w,d5
+		move.w	(Camera_RAM+$3C).w,d5
 		ext.l	d5
 		asl.l	#4,d5
 		asl.l	#1,d5
 		bsr.w	ScrollBlock1
-		move.w	($FFFFF70C).w,($FFFFF618).w
-		lea	($FFFFCC00).w,a1
+		move.w	(Camera_RAM+$0C).w,($FFFFF618).w
+		lea	(Horiz_Scroll_Buf).w,a1
 		move.w	#$DF,d1
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		neg.w	d0
 		swap	d0
-		move.w	($FFFFF708).w,d0
+		move.w	(Camera_RAM+$08).w,d0
 		neg.w	d0
 
 loc_6576:
@@ -7095,23 +7099,23 @@ loc_6576:
 
 
 ScrollHoriz:				; XREF: DeformBgLayer
-		move.w	($FFFFF700).w,d4
+		move.w	(Camera_Horizontal_Pos).w,d4
 		bsr.s	ScrollHoriz2
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		andi.w	#$10,d0
-		move.b	($FFFFF74A).w,d1
+		move.b	(Camera_RAM+$4A).w,d1
 		eor.b	d1,d0
 		bne.s	locret_65B0
-		eori.b	#$10,($FFFFF74A).w
-		move.w	($FFFFF700).w,d0
+		eori.b	#$10,(Camera_RAM+$4A).w
+		move.w	(Camera_Horizontal_Pos).w,d0
 		sub.w	d4,d0
 		bpl.s	loc_65AA
-		bset	#2,($FFFFF754).w
+		bset	#2,(Camera_RAM+$54).w
 		rts	
 ; ===========================================================================
 
 loc_65AA:
-		bset	#3,($FFFFF754).w
+		bset	#3,(Camera_RAM+$54).w
 
 locret_65B0:
 		rts	
@@ -7122,13 +7126,13 @@ locret_65B0:
 
 
 ScrollHoriz2:				; XREF: ScrollHoriz
-		move.w	($FFFFD008).w,d0
-		sub.w	($FFFFF700).w,d0
+		move.w	(Object_RAM+$08).w,d0
+		sub.w	(Camera_Horizontal_Pos).w,d0
 		subi.w	#$90,d0
 		bcs.s	loc_65F6
 		subi.w	#$10,d0
 		bcc.s	loc_65CC
-		clr.w	($FFFFF73A).w
+		clr.w	(Camera_RAM+$3A).w
 		rts	
 ; ===========================================================================
 
@@ -7138,25 +7142,25 @@ loc_65CC:
 		move.w	#$10,d0
 
 loc_65D6:
-		add.w	($FFFFF700).w,d0
-		cmp.w	($FFFFF72A).w,d0
+		add.w	(Camera_Horizontal_Pos).w,d0
+		cmp.w	(Camera_RAM+$2A).w,d0
 		blt.s	loc_65E4
-		move.w	($FFFFF72A).w,d0
+		move.w	(Camera_RAM+$2A).w,d0
 
 loc_65E4:
 		move.w	d0,d1
-		sub.w	($FFFFF700).w,d1
+		sub.w	(Camera_Horizontal_Pos).w,d1
 		asl.w	#8,d1
-		move.w	d0,($FFFFF700).w
-		move.w	d1,($FFFFF73A).w
+		move.w	d0,(Camera_Horizontal_Pos).w
+		move.w	d1,(Camera_RAM+$3A).w
 		rts	
 ; ===========================================================================
 
 loc_65F6:				; XREF: ScrollHoriz2
-		add.w	($FFFFF700).w,d0
-		cmp.w	($FFFFF728).w,d0
+		add.w	(Camera_Horizontal_Pos).w,d0
+		cmp.w	(Camera_RAM+$28).w,d0
 		bgt.s	loc_65E4
-		move.w	($FFFFF728).w,d0
+		move.w	(Camera_RAM+$28).w,d0
 		bra.s	loc_65E4
 ; End of function ScrollHoriz2
 
@@ -7180,40 +7184,40 @@ loc_6610:
 
 ScrollVertical:				; XREF: DeformBgLayer
 		moveq	#0,d1
-		move.w	($FFFFD00C).w,d0
-		sub.w	($FFFFF704).w,d0
-		btst	#2,($FFFFD022).w
+		move.w	(Object_RAM+$0C).w,d0
+		sub.w	(Camera_Vertical_Pos).w,d0
+		btst	#2,(Object_RAM+$22).w
 		beq.s	loc_662A
 		subq.w	#5,d0
 
 loc_662A:
-		btst	#1,($FFFFD022).w
+		btst	#1,(Object_RAM+$22).w
 		beq.s	loc_664A
 		addi.w	#$20,d0
-		sub.w	($FFFFF73E).w,d0
+		sub.w	(Camera_RAM+$3E).w,d0
 		bcs.s	loc_6696
 		subi.w	#$40,d0
 		bcc.s	loc_6696
-		tst.b	($FFFFF75C).w
+		tst.b	(Camera_RAM+$5C).w
 		bne.s	loc_66A8
 		bra.s	loc_6656
 ; ===========================================================================
 
 loc_664A:
-		sub.w	($FFFFF73E).w,d0
+		sub.w	(Camera_RAM+$3E).w,d0
 		bne.s	loc_665C
-		tst.b	($FFFFF75C).w
+		tst.b	(Camera_RAM+$5C).w
 		bne.s	loc_66A8
 
 loc_6656:
-		clr.w	($FFFFF73C).w
+		clr.w	(Camera_RAM+$3C).w
 		rts	
 ; ===========================================================================
 
 loc_665C:
-		cmpi.w	#$60,($FFFFF73E).w
+		cmpi.w	#$60,(Camera_RAM+$3E).w
 		bne.s	loc_6684
-		move.w	($FFFFD014).w,d1
+		move.w	(Object_RAM+$14).w,d1
 		bpl.s	loc_666C
 		neg.w	d1
 
@@ -7248,12 +7252,12 @@ loc_6696:
 
 loc_66A8:
 		moveq	#0,d0
-		move.b	d0,($FFFFF75C).w
+		move.b	d0,(Camera_RAM+$5C).w
 
 loc_66AE:
 		moveq	#0,d1
 		move.w	d0,d1
-		add.w	($FFFFF704).w,d1
+		add.w	(Camera_Vertical_Pos).w,d1
 		tst.w	d0
 		bpl.w	loc_6700
 		bra.w	loc_66CC
@@ -7263,69 +7267,69 @@ loc_66C0:
 		neg.w	d1
 		ext.l	d1
 		asl.l	#8,d1
-		add.l	($FFFFF704).w,d1
+		add.l	(Camera_Vertical_Pos).w,d1
 		swap	d1
 
 loc_66CC:
-		cmp.w	($FFFFF72C).w,d1
+		cmp.w	(Camera_RAM+$2C).w,d1
 		bgt.s	loc_6724
 		cmpi.w	#-$100,d1
 		bgt.s	loc_66F0
 		andi.w	#$7FF,d1
-		andi.w	#$7FF,($FFFFD00C).w
-		andi.w	#$7FF,($FFFFF704).w
-		andi.w	#$3FF,($FFFFF70C).w
+		andi.w	#$7FF,(Object_RAM+$0C).w
+		andi.w	#$7FF,(Camera_Vertical_Pos).w
+		andi.w	#$3FF,(Camera_RAM+$0C).w
 		bra.s	loc_6724
 ; ===========================================================================
 
 loc_66F0:
-		move.w	($FFFFF72C).w,d1
+		move.w	(Camera_RAM+$2C).w,d1
 		bra.s	loc_6724
 ; ===========================================================================
 
 loc_66F6:
 		ext.l	d1
 		asl.l	#8,d1
-		add.l	($FFFFF704).w,d1
+		add.l	(Camera_Vertical_Pos).w,d1
 		swap	d1
 
 loc_6700:
-		cmp.w	($FFFFF72E).w,d1
+		cmp.w	(Camera_RAM+$2E).w,d1
 		blt.s	loc_6724
 		subi.w	#$800,d1
 		bcs.s	loc_6720
-		andi.w	#$7FF,($FFFFD00C).w
-		subi.w	#$800,($FFFFF704).w
-		andi.w	#$3FF,($FFFFF70C).w
+		andi.w	#$7FF,(Object_RAM+$0C).w
+		subi.w	#$800,(Camera_Vertical_Pos).w
+		andi.w	#$3FF,(Camera_RAM+$0C).w
 		bra.s	loc_6724
 ; ===========================================================================
 
 loc_6720:
-		move.w	($FFFFF72E).w,d1
+		move.w	(Camera_RAM+$2E).w,d1
 
 loc_6724:
-		move.w	($FFFFF704).w,d4
+		move.w	(Camera_Vertical_Pos).w,d4
 		swap	d1
 		move.l	d1,d3
-		sub.l	($FFFFF704).w,d3
+		sub.l	(Camera_Vertical_Pos).w,d3
 		ror.l	#8,d3
-		move.w	d3,($FFFFF73C).w
-		move.l	d1,($FFFFF704).w
-		move.w	($FFFFF704).w,d0
+		move.w	d3,(Camera_RAM+$3C).w
+		move.l	d1,(Camera_Vertical_Pos).w
+		move.w	(Camera_Vertical_Pos).w,d0
 		andi.w	#$10,d0
-		move.b	($FFFFF74B).w,d1
+		move.b	(Camera_RAM+$4B).w,d1
 		eor.b	d1,d0
 		bne.s	locret_6766
-		eori.b	#$10,($FFFFF74B).w
-		move.w	($FFFFF704).w,d0
+		eori.b	#$10,(Camera_RAM+$4B).w
+		move.w	(Camera_Vertical_Pos).w,d0
 		sub.w	d4,d0
 		bpl.s	loc_6760
-		bset	#0,($FFFFF754).w
+		bset	#0,(Camera_RAM+$54).w
 		rts	
 ; ===========================================================================
 
 loc_6760:
-		bset	#1,($FFFFF754).w
+		bset	#1,(Camera_RAM+$54).w
 
 locret_6766:
 		rts	
@@ -7336,46 +7340,46 @@ locret_6766:
 
 
 ScrollBlock1:				; XREF: Deform_GHZ; et al
-		move.l	($FFFFF708).w,d2
+		move.l	(Camera_RAM+$08).w,d2
 		move.l	d2,d0
 		add.l	d4,d0
-		move.l	d0,($FFFFF708).w
+		move.l	d0,(Camera_RAM+$08).w
 		move.l	d0,d1
 		swap	d1
 		andi.w	#$10,d1
-		move.b	($FFFFF74C).w,d3
+		move.b	(Camera_RAM+$4C).w,d3
 		eor.b	d3,d1
 		bne.s	loc_679C
-		eori.b	#$10,($FFFFF74C).w
+		eori.b	#$10,(Camera_RAM+$4C).w
 		sub.l	d2,d0
 		bpl.s	loc_6796
-		bset	#2,($FFFFF756).w
+		bset	#2,(Camera_RAM+$56).w
 		bra.s	loc_679C
 ; ===========================================================================
 
 loc_6796:
-		bset	#3,($FFFFF756).w
+		bset	#3,(Camera_RAM+$56).w
 
 loc_679C:
-		move.l	($FFFFF70C).w,d3
+		move.l	(Camera_RAM+$0C).w,d3
 		move.l	d3,d0
 		add.l	d5,d0
-		move.l	d0,($FFFFF70C).w
+		move.l	d0,(Camera_RAM+$0C).w
 		move.l	d0,d1
 		swap	d1
 		andi.w	#$10,d1
-		move.b	($FFFFF74D).w,d2
+		move.b	(Camera_RAM+$4D).w,d2
 		eor.b	d2,d1
 		bne.s	locret_67D0
-		eori.b	#$10,($FFFFF74D).w
+		eori.b	#$10,(Camera_RAM+$4D).w
 		sub.l	d3,d0
 		bpl.s	loc_67CA
-		bset	#0,($FFFFF756).w
+		bset	#0,(Camera_RAM+$56).w
 		rts	
 ; ===========================================================================
 
 loc_67CA:
-		bset	#1,($FFFFF756).w
+		bset	#1,(Camera_RAM+$56).w
 
 locret_67D0:
 		rts	
@@ -7386,29 +7390,29 @@ locret_67D0:
 
 
 ScrollBlock2:				; XREF: Deform_SLZ
-		move.l	($FFFFF708).w,d2
+		move.l	(Camera_RAM+$08).w,d2
 		move.l	d2,d0
 		add.l	d4,d0
-		move.l	d0,($FFFFF708).w
-		move.l	($FFFFF70C).w,d3
+		move.l	d0,(Camera_RAM+$08).w
+		move.l	(Camera_RAM+$0C).w,d3
 		move.l	d3,d0
 		add.l	d5,d0
-		move.l	d0,($FFFFF70C).w
+		move.l	d0,(Camera_RAM+$0C).w
 		move.l	d0,d1
 		swap	d1
 		andi.w	#$10,d1
-		move.b	($FFFFF74D).w,d2
+		move.b	(Camera_RAM+$4D).w,d2
 		eor.b	d2,d1
 		bne.s	locret_6812
-		eori.b	#$10,($FFFFF74D).w
+		eori.b	#$10,(Camera_RAM+$4D).w
 		sub.l	d3,d0
 		bpl.s	loc_680C
-		bset	#0,($FFFFF756).w
+		bset	#0,(Camera_RAM+$56).w
 		rts	
 ; ===========================================================================
 
 loc_680C:
-		bset	#1,($FFFFF756).w
+		bset	#1,(Camera_RAM+$56).w
 
 locret_6812:
 		rts	
@@ -7419,22 +7423,22 @@ locret_6812:
 
 
 ScrollBlock3:				; XREF: Deform_GHZ; et al
-		move.w	($FFFFF70C).w,d3
-		move.w	d0,($FFFFF70C).w
+		move.w	(Camera_RAM+$0C).w,d3
+		move.w	d0,(Camera_RAM+$0C).w
 		move.w	d0,d1
 		andi.w	#$10,d1
-		move.b	($FFFFF74D).w,d2
+		move.b	(Camera_RAM+$4D).w,d2
 		eor.b	d2,d1
 		bne.s	locret_6842
-		eori.b	#$10,($FFFFF74D).w
+		eori.b	#$10,(Camera_RAM+$4D).w
 		sub.w	d3,d0
 		bpl.s	loc_683C
-		bset	#0,($FFFFF756).w
+		bset	#0,(Camera_RAM+$56).w
 		rts	
 ; ===========================================================================
 
 loc_683C:
-		bset	#1,($FFFFF756).w
+		bset	#1,(Camera_RAM+$56).w
 
 locret_6842:
 		rts	
@@ -7445,27 +7449,27 @@ locret_6842:
 
 
 ScrollBlock4:				; XREF: Deform_GHZ
-		move.w	($FFFFF710).w,d2
-		move.w	($FFFFF714).w,d3
-		move.w	($FFFFF73A).w,d0
+		move.w	(Camera_RAM+$10).w,d2
+		move.w	(Camera_RAM+$14).w,d3
+		move.w	(Camera_RAM+$3A).w,d0
 		ext.l	d0
 		asl.l	#7,d0
-		add.l	d0,($FFFFF710).w
-		move.w	($FFFFF710).w,d0
+		add.l	d0,(Camera_RAM+$10).w
+		move.w	(Camera_RAM+$10).w,d0
 		andi.w	#$10,d0
-		move.b	($FFFFF74E).w,d1
+		move.b	(Camera_RAM+$4E).w,d1
 		eor.b	d1,d0
 		bne.s	locret_6884
-		eori.b	#$10,($FFFFF74E).w
-		move.w	($FFFFF710).w,d0
+		eori.b	#$10,(Camera_RAM+$4E).w
+		move.w	(Camera_RAM+$10).w,d0
 		sub.w	d2,d0
 		bpl.s	loc_687E
-		bset	#2,($FFFFF758).w
+		bset	#2,(Camera_RAM+$58).w
 		bra.s	locret_6884
 ; ===========================================================================
 
 loc_687E:
-		bset	#3,($FFFFF758).w
+		bset	#3,(Camera_RAM+$58).w
 
 locret_6884:
 		rts	
@@ -7478,13 +7482,13 @@ locret_6884:
 sub_6886:				; XREF: loc_C44
 		lea	($C00004).l,a5
 		lea	($C00000).l,a6
-		lea	($FFFFF756).w,a2
-		lea	($FFFFF708).w,a3
+		lea	(Camera_RAM+$56).w,a2
+		lea	(Camera_RAM+$08).w,a3
 		movea.l	($FFFFA404).w,a4			; MJ: Load address of layout BG
 		move.w	#$6000,d2
 		bsr.w	sub_6954
-		lea	($FFFFF758).w,a2
-		lea	($FFFFF710).w,a3
+		lea	(Camera_RAM+$58).w,a2
+		lea	(Camera_RAM+$10).w,a3
 		bra.w	sub_69F4
 ; End of function sub_6886
 
@@ -7868,7 +7872,7 @@ loc_6B90:
 ; Reading from layout
 
 sub_6BD6:
-		lea	($FFFFB000).w,a1			; MJ: load Block's location
+		lea	(Block_RAM).w,a1			; MJ: load Block's location
 		add.w	4(a3),d4				; MJ: load Y position to d4
 		add.w	(a3),d5					; MJ: load X position to d5
 		move.w	d4,d3					; MJ: copy Y position to d3
@@ -7943,11 +7947,11 @@ sub_6C3C:
 LoadTilesFromStart:			; XREF: Level; EndingSequence
 		lea	($C00004).l,a5
 		lea	($C00000).l,a6
-		lea	($FFFFF700).w,a3
+		lea	(Camera_Horizontal_Pos).w,a3
 		movea.l	($FFFFA400).w,a4			; MJ: Load address of layout
 		move.w	#$4000,d2
 		bsr.s	LoadTilesFromStart2
-		lea	($FFFFF708).w,a3
+		lea	(Camera_RAM+$08).w,a3
 		movea.l	($FFFFA404).w,a4			; MJ: Load address of layout BG
 		move.w	#$6000,d2
 ; End of function LoadTilesFromStart
@@ -7991,7 +7995,7 @@ MainLoadBlockLoad:			; XREF: Level; EndingSequence
 		move.l	a2,-(sp)
 		addq.l	#4,a2
 		movea.l	(a2)+,a0
-		lea	($FFFFB000).w,a1 ; RAM address for 16x16 mappings
+		lea	(Block_RAM).w,a1 ; RAM address for 16x16 mappings
 		move.w	#0,d0
 		bsr.w	EniDec
 		movea.l	(a2)+,a0
@@ -8064,38 +8068,38 @@ DynScrResizeLoad:			; XREF: DeformBgLayer
 		move.w	Resize_Index(pc,d0.w),d0
 		jsr	Resize_Index(pc,d0.w)
 		moveq	#2,d1
-		move.w	($FFFFF726).w,d0
-		sub.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$26).w,d0
+		sub.w	(Camera_RAM+$2E).w,d0
 		beq.s	locret_6DAA
 		bcc.s	loc_6DAC
 		neg.w	d1
-		move.w	($FFFFF704).w,d0
-		cmp.w	($FFFFF726).w,d0
+		move.w	(Camera_Vertical_Pos).w,d0
+		cmp.w	(Camera_RAM+$26).w,d0
 		bls.s	loc_6DA0
-		move.w	d0,($FFFFF72E).w
-		andi.w	#-2,($FFFFF72E).w
+		move.w	d0,(Camera_RAM+$2E).w
+		andi.w	#-2,(Camera_RAM+$2E).w
 
 loc_6DA0:
-		add.w	d1,($FFFFF72E).w
-		move.b	#1,($FFFFF75C).w
+		add.w	d1,(Camera_RAM+$2E).w
+		move.b	#1,(Camera_RAM+$5C).w
 
 locret_6DAA:
 		rts	
 ; ===========================================================================
 
 loc_6DAC:				; XREF: DynScrResizeLoad
-		move.w	($FFFFF704).w,d0
+		move.w	(Camera_Vertical_Pos).w,d0
 		addq.w	#8,d0
-		cmp.w	($FFFFF72E).w,d0
+		cmp.w	(Camera_RAM+$2E).w,d0
 		bcs.s	loc_6DC4
-		btst	#1,($FFFFD022).w
+		btst	#1,(Object_RAM+$22).w
 		beq.s	loc_6DC4
 		add.w	d1,d1
 		add.w	d1,d1
 
 loc_6DC4:
-		add.w	d1,($FFFFF72E).w
-		move.b	#1,($FFFFF75C).w
+		add.w	d1,(Camera_RAM+$2E).w
+		move.b	#1,(Camera_RAM+$5C).w
 		rts	
 ; End of function DynScrResizeLoad
 
@@ -8125,26 +8129,26 @@ Resize_GHZx:	dc.w Resize_GHZ1-Resize_GHZx
 ; ===========================================================================
 
 Resize_GHZ1:
-		move.w	#$300,($FFFFF726).w ; set lower	y-boundary
-		cmpi.w	#$1780,($FFFFF700).w ; has the camera reached $1780 on x-axis?
+		move.w	#$300,(Camera_RAM+$26).w ; set lower	y-boundary
+		cmpi.w	#$1780,(Camera_Horizontal_Pos).w ; has the camera reached $1780 on x-axis?
 		bcs.s	locret_6E08	; if not, branch
-		move.w	#$400,($FFFFF726).w ; set lower	y-boundary
+		move.w	#$400,(Camera_RAM+$26).w ; set lower	y-boundary
 
 locret_6E08:
 		rts	
 ; ===========================================================================
 
 Resize_GHZ2:
-		move.w	#$300,($FFFFF726).w
-		cmpi.w	#$ED0,($FFFFF700).w
+		move.w	#$300,(Camera_RAM+$26).w
+		cmpi.w	#$ED0,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6E3A
-		move.w	#$200,($FFFFF726).w
-		cmpi.w	#$1600,($FFFFF700).w
+		move.w	#$200,(Camera_RAM+$26).w
+		cmpi.w	#$1600,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6E3A
-		move.w	#$400,($FFFFF726).w
-		cmpi.w	#$1D60,($FFFFF700).w
+		move.w	#$400,(Camera_RAM+$26).w
+		cmpi.w	#$1D60,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6E3A
-		move.w	#$300,($FFFFF726).w
+		move.w	#$300,(Camera_RAM+$26).w
 
 locret_6E3A:
 		rts	
@@ -8152,7 +8156,7 @@ locret_6E3A:
 
 Resize_GHZ3:
 		moveq	#0,d0
-		move.b	($FFFFF742).w,d0
+		move.b	(Camera_RAM+$42).w,d0
 		move.w	off_6E4A(pc,d0.w),d0
 		jmp	off_6E4A(pc,d0.w)
 ; ===========================================================================
@@ -8162,22 +8166,22 @@ off_6E4A:	dc.w Resize_GHZ3main-off_6E4A
 ; ===========================================================================
 
 Resize_GHZ3main:
-		move.w	#$300,($FFFFF726).w
-		cmpi.w	#$380,($FFFFF700).w
+		move.w	#$300,(Camera_RAM+$26).w
+		cmpi.w	#$380,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6E96
-		move.w	#$310,($FFFFF726).w
-		cmpi.w	#$960,($FFFFF700).w
+		move.w	#$310,(Camera_RAM+$26).w
+		cmpi.w	#$960,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6E96
-		cmpi.w	#$280,($FFFFF704).w
+		cmpi.w	#$280,(Camera_Vertical_Pos).w
 		bcs.s	loc_6E98
-		move.w	#$400,($FFFFF726).w
-		cmpi.w	#$1380,($FFFFF700).w
+		move.w	#$400,(Camera_RAM+$26).w
+		cmpi.w	#$1380,(Camera_Horizontal_Pos).w
 		bcc.s	loc_6E8E
-		move.w	#$4C0,($FFFFF726).w
-		move.w	#$4C0,($FFFFF72E).w
+		move.w	#$4C0,(Camera_RAM+$26).w
+		move.w	#$4C0,(Camera_RAM+$2E).w
 
 loc_6E8E:
-		cmpi.w	#$1700,($FFFFF700).w
+		cmpi.w	#$1700,(Camera_Horizontal_Pos).w
 		bcc.s	loc_6E98
 
 locret_6E96:
@@ -8185,18 +8189,18 @@ locret_6E96:
 ; ===========================================================================
 
 loc_6E98:
-		move.w	#$300,($FFFFF726).w
-		addq.b	#2,($FFFFF742).w
+		move.w	#$300,(Camera_RAM+$26).w
+		addq.b	#2,(Camera_RAM+$42).w
 		rts	
 ; ===========================================================================
 
 Resize_GHZ3boss:
-		cmpi.w	#$960,($FFFFF700).w
+		cmpi.w	#$960,(Camera_Horizontal_Pos).w
 		bcc.s	loc_6EB0
-		subq.b	#2,($FFFFF742).w
+		subq.b	#2,(Camera_RAM+$42).w
 
 loc_6EB0:
-		cmpi.w	#$2960,($FFFFF700).w
+		cmpi.w	#$2960,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6EE8
 		bsr.w	SingleObjLoad
 		bne.s	loc_6ED0
@@ -8208,7 +8212,7 @@ loc_6ED0:
 		move.w	#$8C,d0
 		bsr.w	PlaySound	; play boss music
 		move.b	#1,($FFFFF7AA).w ; lock	screen
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 		moveq	#$11,d0
 		bra.w	LoadPLC		; load boss patterns
 ; ===========================================================================
@@ -8218,7 +8222,7 @@ locret_6EE8:
 ; ===========================================================================
 
 Resize_GHZ3end:
-		move.w	($FFFFF700).w,($FFFFF728).w
+		move.w	(Camera_Horizontal_Pos).w,(Camera_RAM+$28).w
 		rts	
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -8253,11 +8257,11 @@ Resize_LZ3:
 		bsr.w	PlaySound_Special ; play rumbling sound
 
 loc_6F28:
-		tst.b	($FFFFF742).w
+		tst.b	(Camera_RAM+$42).w
 		bne.s	locret_6F64
-		cmpi.w	#$1CA0,($FFFFF700).w
+		cmpi.w	#$1CA0,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6F62
-		cmpi.w	#$600,($FFFFF704).w
+		cmpi.w	#$600,(Camera_Vertical_Pos).w
 		bcc.s	locret_6F62
 		bsr.w	SingleObjLoad
 		bne.s	loc_6F4A
@@ -8267,7 +8271,7 @@ loc_6F4A:
 		move.w	#$8C,d0
 		bsr.w	PlaySound	; play boss music
 		move.b	#1,($FFFFF7AA).w ; lock	screen
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 		moveq	#$11,d0
 		bra.w	LoadPLC		; load boss patterns
 ; ===========================================================================
@@ -8281,9 +8285,9 @@ locret_6F64:
 ; ===========================================================================
 
 Resize_SBZ3:
-		cmpi.w	#$D00,($FFFFF700).w
+		cmpi.w	#$D00,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6F8C
-		cmpi.w	#$18,($FFFFD00C).w ; has Sonic reached the top of the level?
+		cmpi.w	#$18,(Object_RAM+$0C).w ; has Sonic reached the top of the level?
 		bcc.s	locret_6F8C	; if not, branch
 		clr.b	($FFFFFE30).w
 		move.w	#1,($FFFFFE02).w ; restart level
@@ -8311,7 +8315,7 @@ Resize_MZx:	dc.w Resize_MZ1-Resize_MZx
 
 Resize_MZ1:
 		moveq	#0,d0
-		move.b	($FFFFF742).w,d0
+		move.b	(Camera_RAM+$42).w,d0
 		move.w	off_6FB2(pc,d0.w),d0
 		jmp	off_6FB2(pc,d0.w)
 ; ===========================================================================
@@ -8322,80 +8326,80 @@ off_6FB2:	dc.w loc_6FBA-off_6FB2
 ; ===========================================================================
 
 loc_6FBA:
-		move.w	#$1D0,($FFFFF726).w
-		cmpi.w	#$700,($FFFFF700).w
+		move.w	#$1D0,(Camera_RAM+$26).w
+		cmpi.w	#$700,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6FE8
-		move.w	#$220,($FFFFF726).w
-		cmpi.w	#$D00,($FFFFF700).w
+		move.w	#$220,(Camera_RAM+$26).w
+		cmpi.w	#$D00,(Camera_Horizontal_Pos).w
 		bcs.s	locret_6FE8
-		move.w	#$340,($FFFFF726).w
-		cmpi.w	#$340,($FFFFF704).w
+		move.w	#$340,(Camera_RAM+$26).w
+		cmpi.w	#$340,(Camera_Vertical_Pos).w
 		bcs.s	locret_6FE8
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 locret_6FE8:
 		rts	
 ; ===========================================================================
 
 loc_6FEA:
-		cmpi.w	#$340,($FFFFF704).w
+		cmpi.w	#$340,(Camera_Vertical_Pos).w
 		bcc.s	loc_6FF8
-		subq.b	#2,($FFFFF742).w
+		subq.b	#2,(Camera_RAM+$42).w
 		rts	
 ; ===========================================================================
 
 loc_6FF8:
-		move.w	#0,($FFFFF72C).w
-		cmpi.w	#$E00,($FFFFF700).w
+		move.w	#0,(Camera_RAM+$2C).w
+		cmpi.w	#$E00,(Camera_Horizontal_Pos).w
 		bcc.s	locret_702C
-		move.w	#$340,($FFFFF72C).w
-		move.w	#$340,($FFFFF726).w
-		cmpi.w	#$A90,($FFFFF700).w
+		move.w	#$340,(Camera_RAM+$2C).w
+		move.w	#$340,(Camera_RAM+$26).w
+		cmpi.w	#$A90,(Camera_Horizontal_Pos).w
 		bcc.s	locret_702C
-		move.w	#$500,($FFFFF726).w
-		cmpi.w	#$370,($FFFFF704).w
+		move.w	#$500,(Camera_RAM+$26).w
+		cmpi.w	#$370,(Camera_Vertical_Pos).w
 		bcs.s	locret_702C
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 locret_702C:
 		rts	
 ; ===========================================================================
 
 loc_702E:
-		cmpi.w	#$370,($FFFFF704).w
+		cmpi.w	#$370,(Camera_Vertical_Pos).w
 		bcc.s	loc_703C
-		subq.b	#2,($FFFFF742).w
+		subq.b	#2,(Camera_RAM+$42).w
 		rts	
 ; ===========================================================================
 
 loc_703C:
-		cmpi.w	#$500,($FFFFF704).w
+		cmpi.w	#$500,(Camera_Vertical_Pos).w
 		bcs.s	locret_704E
-		move.w	#$500,($FFFFF72C).w
-		addq.b	#2,($FFFFF742).w
+		move.w	#$500,(Camera_RAM+$2C).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 locret_704E:
 		rts	
 ; ===========================================================================
 
 loc_7050:
-		cmpi.w	#$E70,($FFFFF700).w
+		cmpi.w	#$E70,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7072
-		move.w	#0,($FFFFF72C).w
-		move.w	#$500,($FFFFF726).w
-		cmpi.w	#$1430,($FFFFF700).w
+		move.w	#0,(Camera_RAM+$2C).w
+		move.w	#$500,(Camera_RAM+$26).w
+		cmpi.w	#$1430,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7072
-		move.w	#$210,($FFFFF726).w
+		move.w	#$210,(Camera_RAM+$26).w
 
 locret_7072:
 		rts	
 ; ===========================================================================
 
 Resize_MZ2:
-		move.w	#$520,($FFFFF726).w
-		cmpi.w	#$1700,($FFFFF700).w
+		move.w	#$520,(Camera_RAM+$26).w
+		cmpi.w	#$1700,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7088
-		move.w	#$200,($FFFFF726).w
+		move.w	#$200,(Camera_RAM+$26).w
 
 locret_7088:
 		rts	
@@ -8403,7 +8407,7 @@ locret_7088:
 
 Resize_MZ3:
 		moveq	#0,d0
-		move.b	($FFFFF742).w,d0
+		move.b	(Camera_RAM+$42).w,d0
 		move.w	off_7098(pc,d0.w),d0
 		jmp	off_7098(pc,d0.w)
 ; ===========================================================================
@@ -8412,11 +8416,11 @@ off_7098:	dc.w Resize_MZ3boss-off_7098
 ; ===========================================================================
 
 Resize_MZ3boss:
-		move.w	#$720,($FFFFF726).w
-		cmpi.w	#$1560,($FFFFF700).w
+		move.w	#$720,(Camera_RAM+$26).w
+		cmpi.w	#$1560,(Camera_Horizontal_Pos).w
 		bcs.s	locret_70E8
-		move.w	#$210,($FFFFF726).w
-		cmpi.w	#$17F0,($FFFFF700).w
+		move.w	#$210,(Camera_RAM+$26).w
+		cmpi.w	#$17F0,(Camera_Horizontal_Pos).w
 		bcs.s	locret_70E8
 		bsr.w	SingleObjLoad
 		bne.s	loc_70D0
@@ -8428,7 +8432,7 @@ loc_70D0:
 		move.w	#$8C,d0
 		bsr.w	PlaySound	; play boss music
 		move.b	#1,($FFFFF7AA).w ; lock	screen
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 		moveq	#$11,d0
 		bra.w	LoadPLC		; load boss patterns
 ; ===========================================================================
@@ -8438,7 +8442,7 @@ locret_70E8:
 ; ===========================================================================
 
 Resize_MZ3end:
-		move.w	($FFFFF700).w,($FFFFF728).w
+		move.w	(Camera_Horizontal_Pos).w,(Camera_RAM+$28).w
 		rts	
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -8463,7 +8467,7 @@ Resize_SLZ12:
 
 Resize_SLZ3:
 		moveq	#0,d0
-		move.b	($FFFFF742).w,d0
+		move.b	(Camera_RAM+$42).w,d0
 		move.w	off_7118(pc,d0.w),d0
 		jmp	off_7118(pc,d0.w)
 ; ===========================================================================
@@ -8473,17 +8477,17 @@ off_7118:	dc.w Resize_SLZ3main-off_7118
 ; ===========================================================================
 
 Resize_SLZ3main:
-		cmpi.w	#$1E70,($FFFFF700).w
+		cmpi.w	#$1E70,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7130
-		move.w	#$210,($FFFFF726).w
-		addq.b	#2,($FFFFF742).w
+		move.w	#$210,(Camera_RAM+$26).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 locret_7130:
 		rts	
 ; ===========================================================================
 
 Resize_SLZ3boss:
-		cmpi.w	#$2000,($FFFFF700).w
+		cmpi.w	#$2000,(Camera_Horizontal_Pos).w
 		bcs.s	locret_715C
 		bsr.w	SingleObjLoad
 		bne.s	loc_7144
@@ -8493,7 +8497,7 @@ loc_7144:
 		move.w	#$8C,d0
 		bsr.w	PlaySound	; play boss music
 		move.b	#1,($FFFFF7AA).w ; lock	screen
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 		moveq	#$11,d0
 		bra.w	LoadPLC		; load boss patterns
 ; ===========================================================================
@@ -8503,7 +8507,7 @@ locret_715C:
 ; ===========================================================================
 
 Resize_SLZ3end:
-		move.w	($FFFFF700).w,($FFFFF728).w
+		move.w	(Camera_Horizontal_Pos).w,(Camera_RAM+$28).w
 		rts
 		rts
 ; ===========================================================================
@@ -8528,13 +8532,13 @@ Resize_SYZ1:
 ; ===========================================================================
 
 Resize_SYZ2:
-		move.w	#$520,($FFFFF726).w
-		cmpi.w	#$25A0,($FFFFF700).w
+		move.w	#$520,(Camera_RAM+$26).w
+		cmpi.w	#$25A0,(Camera_Horizontal_Pos).w
 		bcs.s	locret_71A2
-		move.w	#$420,($FFFFF726).w
-		cmpi.w	#$4D0,($FFFFD00C).w
+		move.w	#$420,(Camera_RAM+$26).w
+		cmpi.w	#$4D0,(Object_RAM+$0C).w
 		bcs.s	locret_71A2
-		move.w	#$520,($FFFFF726).w
+		move.w	#$520,(Camera_RAM+$26).w
 
 locret_71A2:
 		rts	
@@ -8542,7 +8546,7 @@ locret_71A2:
 
 Resize_SYZ3:
 		moveq	#0,d0
-		move.b	($FFFFF742).w,d0
+		move.b	(Camera_RAM+$42).w,d0
 		move.w	off_71B2(pc,d0.w),d0
 		jmp	off_71B2(pc,d0.w)
 ; ===========================================================================
@@ -8552,25 +8556,25 @@ off_71B2:	dc.w Resize_SYZ3main-off_71B2
 ; ===========================================================================
 
 Resize_SYZ3main:
-		cmpi.w	#$2AC0,($FFFFF700).w
+		cmpi.w	#$2AC0,(Camera_Horizontal_Pos).w
 		bcs.s	locret_71CE
 		bsr.w	SingleObjLoad
 		bne.s	locret_71CE
 		move.b	#$76,(a1)	; load blocks that boss	picks up
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 locret_71CE:
 		rts	
 ; ===========================================================================
 
 Resize_SYZ3boss:
-		cmpi.w	#$2C00,($FFFFF700).w
+		cmpi.w	#$2C00,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7200
-		move.w	#$4CC,($FFFFF726).w
+		move.w	#$4CC,(Camera_RAM+$26).w
 		bsr.w	SingleObjLoad
 		bne.s	loc_71EC
 		move.b	#$75,(a1)	; load SYZ boss	object
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 loc_71EC:
 		move.w	#$8C,d0
@@ -8585,7 +8589,7 @@ locret_7200:
 ; ===========================================================================
 
 Resize_SYZ3end:
-		move.w	($FFFFF700).w,($FFFFF728).w
+		move.w	(Camera_Horizontal_Pos).w,(Camera_RAM+$28).w
 		rts	
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -8605,13 +8609,13 @@ Resize_SBZx:	dc.w Resize_SBZ1-Resize_SBZx
 ; ===========================================================================
 
 Resize_SBZ1:
-		move.w	#$720,($FFFFF726).w
-		cmpi.w	#$1880,($FFFFF700).w
+		move.w	#$720,(Camera_RAM+$26).w
+		cmpi.w	#$1880,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7242
-		move.w	#$620,($FFFFF726).w
-		cmpi.w	#$2000,($FFFFF700).w
+		move.w	#$620,(Camera_RAM+$26).w
+		cmpi.w	#$2000,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7242
-		move.w	#$2A0,($FFFFF726).w
+		move.w	#$2A0,(Camera_RAM+$26).w
 
 locret_7242:
 		rts	
@@ -8619,7 +8623,7 @@ locret_7242:
 
 Resize_SBZ2:
 		moveq	#0,d0
-		move.b	($FFFFF742).w,d0
+		move.b	(Camera_RAM+$42).w,d0
 		move.w	off_7252(pc,d0.w),d0
 		jmp	off_7252(pc,d0.w)
 ; ===========================================================================
@@ -8630,25 +8634,25 @@ off_7252:	dc.w Resize_SBZ2main-off_7252
 ; ===========================================================================
 
 Resize_SBZ2main:
-		move.w	#$800,($FFFFF726).w
-		cmpi.w	#$1800,($FFFFF700).w
+		move.w	#$800,(Camera_RAM+$26).w
+		cmpi.w	#$1800,(Camera_Horizontal_Pos).w
 		bcs.s	locret_727A
-		move.w	#$510,($FFFFF726).w
-		cmpi.w	#$1E00,($FFFFF700).w
+		move.w	#$510,(Camera_RAM+$26).w
+		cmpi.w	#$1E00,(Camera_Horizontal_Pos).w
 		bcs.s	locret_727A
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 locret_727A:
 		rts	
 ; ===========================================================================
 
 Resize_SBZ2boss:
-		cmpi.w	#$1EB0,($FFFFF700).w
+		cmpi.w	#$1EB0,(Camera_Horizontal_Pos).w
 		bcs.s	locret_7298
 		bsr.w	SingleObjLoad
 		bne.s	locret_7298
 		move.b	#$83,(a1)	; load collapsing block	object
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 		moveq	#$1E,d0
 		bra.w	LoadPLC		; load SBZ2 Eggman patterns
 ; ===========================================================================
@@ -8658,12 +8662,12 @@ locret_7298:
 ; ===========================================================================
 
 Resize_SBZ2boss2:
-		cmpi.w	#$1F60,($FFFFF700).w
+		cmpi.w	#$1F60,(Camera_Horizontal_Pos).w
 		bcs.s	loc_72B6
 		bsr.w	SingleObjLoad
 		bne.s	loc_72B0
 		move.b	#$82,(a1)	; load SBZ2 Eggman object
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 loc_72B0:
 		move.b	#1,($FFFFF7AA).w ; lock	screen
@@ -8673,19 +8677,19 @@ loc_72B6:
 ; ===========================================================================
 
 Resize_SBZ2end:
-		cmpi.w	#$2050,($FFFFF700).w
+		cmpi.w	#$2050,(Camera_Horizontal_Pos).w
 		bcs.s	loc_72C2
 		rts	
 ; ===========================================================================
 
 loc_72C2:
-		move.w	($FFFFF700).w,($FFFFF728).w
+		move.w	(Camera_Horizontal_Pos).w,(Camera_RAM+$28).w
 		rts	
 ; ===========================================================================
 
 Resize_FZ:
 		moveq	#0,d0
-		move.b	($FFFFF742).w,d0
+		move.b	(Camera_RAM+$42).w,d0
 		move.w	off_72D8(pc,d0.w),d0
 		jmp	off_72D8(pc,d0.w)
 ; ===========================================================================
@@ -8695,9 +8699,9 @@ off_72D8:	dc.w Resize_FZmain-off_72D8, Resize_FZboss-off_72D8
 ; ===========================================================================
 
 Resize_FZmain:
-		cmpi.w	#$2148,($FFFFF700).w
+		cmpi.w	#$2148,(Camera_Horizontal_Pos).w
 		bcs.s	loc_72F4
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 		moveq	#$1F,d0
 		bsr.w	LoadPLC		; load FZ boss patterns
 
@@ -8706,12 +8710,12 @@ loc_72F4:
 ; ===========================================================================
 
 Resize_FZboss:
-		cmpi.w	#$2300,($FFFFF700).w
+		cmpi.w	#$2300,(Camera_Horizontal_Pos).w
 		bcs.s	loc_7312
 		bsr.w	SingleObjLoad
 		bne.s	loc_7312
 		move.b	#$85,(a1)	; load FZ boss object
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 		move.b	#1,($FFFFF7AA).w ; lock	screen
 
 loc_7312:
@@ -8719,9 +8723,9 @@ loc_7312:
 ; ===========================================================================
 
 Resize_FZend:
-		cmpi.w	#$2450,($FFFFF700).w
+		cmpi.w	#$2450,(Camera_Horizontal_Pos).w
 		bcs.s	loc_7320
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 loc_7320:
 		bra.s	loc_72C2
@@ -8833,7 +8837,7 @@ Obj11_Solid:				; XREF: Obj11_Action
 		move.w	d1,d2
 		addq.w	#8,d1
 		add.w	d2,d2
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		tst.w	$12(a1)
 		bmi.w	locret_751E
 		move.w	8(a1),d0
@@ -8853,7 +8857,7 @@ Obj11_Solid:				; XREF: Obj11_Action
 
 
 PlatformObject:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		tst.w	$12(a1)
 		bmi.w	locret_751E
 		move.w	8(a1),d0
@@ -8933,7 +8937,7 @@ locret_751E:
 
 
 SlopeObject:				; XREF: Obj1A_Slope; Obj5E_Slope
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		tst.w	$12(a1)
 		bmi.w	locret_751E
 		move.w	8(a1),d0
@@ -8962,7 +8966,7 @@ loc_754A:
 
 
 Obj15_Solid:				; XREF: Obj15_SetSolid
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		tst.w	$12(a1)
 		bmi.w	locret_751E
 		move.w	8(a1),d0
@@ -9026,7 +9030,7 @@ ExitPlatform:
 
 ExitPlatform2:
 		add.w	d2,d2
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		btst	#1,$22(a1)
 		bne.s	loc_75E0
 		move.w	8(a1),d0
@@ -9056,7 +9060,7 @@ Obj11_MoveSonic:			; XREF: Obj11_WalkOff
 		lsl.w	#6,d0
 		addi.l	#$FFD000,d0
 		movea.l	d0,a2
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	$C(a2),d0
 		subq.w	#8,d0
 		moveq	#0,d1
@@ -9155,7 +9159,7 @@ Obj11_BendData2:incbin	misc\ghzbend2.bin
 Obj11_ChkDel:				; XREF: Obj11_Display; Obj11_Action2
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -9354,7 +9358,7 @@ Obj15_Action2:				; XREF: Obj15_Index
 
 
 MvSonicOnPtfm:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	$C(a0),d0
 		sub.w	d3,d0
 		bra.s	MvSonic2
@@ -9368,14 +9372,14 @@ MvSonicOnPtfm:
 
 
 MvSonicOnPtfm2:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	$C(a0),d0
 		subi.w	#9,d0
 
 MvSonic2:
 		tst.b	($FFFFF7C8).w
 		bmi.s	locret_7B62
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	locret_7B62
 		tst.w	($FFFFFE08).w
 		bne.s	locret_7B62
@@ -9474,7 +9478,7 @@ loc_7BCE:
 Obj15_ChkDel:				; XREF: Obj15_Action; Obj15_Action2
 		move.w	$3A(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -9619,7 +9623,7 @@ locret_7DA6:
 Obj17_ChkDel:				; XREF: Obj17_Action
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -9895,7 +9899,7 @@ loc_8048:
 		add.l	d0,d3
 		move.l	d3,$2C(a0)
 		addi.w	#$38,$12(a0)
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$E0,d0
 		cmp.w	$2C(a0),d0
 		bcc.s	locret_8074
@@ -9956,7 +9960,7 @@ Obj18_ChgMotion:
 Obj18_ChkDel:				; XREF: Obj18_Action; Obj18_Action2
 		move.w	$32(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -10081,7 +10085,7 @@ Obj1A_Display:				; XREF: Obj1A_Index
 loc_82D0:				; XREF: Obj1A_Display
 		subq.b	#1,$38(a0)
 		bsr.w	Obj1A_WalkOff
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		btst	#3,$22(a1)
 		beq.s	loc_82FC
 		tst.b	$38(a0)
@@ -10200,7 +10204,7 @@ Obj53_Display:				; XREF: Obj53_Index
 loc_8402:
 		subq.b	#1,$38(a0)
 		bsr.w	Obj53_WalkOff
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		btst	#3,$22(a1)
 		beq.s	loc_842E
 		tst.b	$38(a0)
@@ -10311,7 +10315,7 @@ Obj53_Data3:	dc.b $16, $1E, $1A, $12, 6, $E,	$A, 2
 
 
 SlopeObject2:				; XREF: Obj1A_WalkOff; et al
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		btst	#3,$22(a1)
 		beq.s	locret_856E
 		move.w	8(a1),d0
@@ -10391,7 +10395,7 @@ Obj1C_Main:				; XREF: Obj1C_Index
 Obj1C_ChkDel:				; XREF: Obj1C_Index
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -10459,7 +10463,7 @@ Obj1D_ChkDel:
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -10479,7 +10483,7 @@ Obj1D_Delete:				; XREF: Obj1D_Index
 
 
 Obj1D_ChkTouch:				; XREF: Obj1D_Action
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		add.w	d1,d0
@@ -10539,7 +10543,7 @@ Obj2A_Main:				; XREF: Obj2A_Index
 Obj2A_OpenShut:				; XREF: Obj2A_Index
 		move.w	#$40,d1
 		clr.b	$1C(a0)		; use "closing"	animation
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		add.w	d1,d0
 		cmp.w	8(a0),d0
 		bcs.s	Obj2A_Animate
@@ -10648,7 +10652,7 @@ locret_8AD8:
 
 
 Obj44_SolidWall2:			; XREF: Obj44_SolidWall
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		add.w	d1,d0
@@ -10670,7 +10674,7 @@ Obj44_SolidWall2:			; XREF: Obj44_SolidWall
 		bcc.s	loc_8B48
 		tst.b	($FFFFF7C8).w
 		bmi.s	loc_8B48
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	loc_8B48
 		tst.w	($FFFFFE08).w
 		bne.s	loc_8B48
@@ -10852,7 +10856,7 @@ Obj20_Animate:				; XREF: Obj20_ChkExplode
 
 Obj20_Display:
 		bsr.w	DisplaySprite
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$E0,d0
 		cmp.w	$C(a0),d0	; has object fallen off	the level?
 		bcs.w	DeleteObject	; if yes, branch
@@ -11233,7 +11237,7 @@ loc_9212:
 
 loc_9224:				; XREF: Obj28_Index
 		move.w	8(a0),d0
-		sub.w	($FFFFD008).w,d0
+		sub.w	(Object_RAM+$08).w,d0
 		bcs.s	loc_923C
 		subi.w	#$180,d0
 		bpl.s	loc_923C
@@ -11400,7 +11404,7 @@ locret_93EA:
 loc_93EC:
 		bset	#0,1(a0)
 		move.w	8(a0),d0
-		sub.w	($FFFFD008).w,d0
+		sub.w	(Object_RAM+$08).w,d0
 		bcc.s	locret_9402
 		bclr	#0,1(a0)
 
@@ -11411,7 +11415,7 @@ locret_9402:
 
 
 sub_9404:
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		subi.w	#$B8,d0
 		rts	
@@ -11667,7 +11671,7 @@ Obj1F_BallMove:				; XREF: Obj1F_Index
 		bsr.w	AnimateSprite
 		bsr.w	ObjectFall
 		bsr.w	DisplaySprite
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$E0,d0
 		cmp.w	$C(a0),d0	; has object moved below the level boundary?
 		bcs.s	Obj1F_Delete2	; if yes, branch
@@ -11775,7 +11779,7 @@ Obj22_ChkNrSonic:			; XREF: Obj22_Index2
 		bsr.w	SpeedToPos
 		tst.b	$34(a0)
 		bne.s	locret_992A
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bpl.s	Obj22_SetNrSonic
 		neg.w	d0
@@ -11874,7 +11878,7 @@ Obj23_FromBuzz:				; XREF: Obj23_Index
 		lea	(Ani_obj23).l,a1
 		bsr.w	AnimateSprite
 		bsr.w	DisplaySprite
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$E0,d0
 		cmp.w	$C(a0),d0	; has object moved below the level boundary?
 		bcs.s	Obj23_Delete	; if yes, branch
@@ -12028,7 +12032,7 @@ Obj25_Animate:				; XREF: Obj25_Index
 		bsr.w	DisplaySprite
 		move.w	$32(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -12184,7 +12188,7 @@ Obj37_Bounce:				; XREF: Obj37_Index
 Obj37_ChkDel:				; XREF: Obj37_Bounce
 		tst.b	($FFFFFEC6).w
 		beq.s	Obj37_Delete
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$E0,d0
 		cmp.w	$C(a0),d0	; has object moved below level boundary?
 		bcs.s	Obj37_Delete	; if yes, branch
@@ -12246,7 +12250,7 @@ Obj4B_Animate:				; XREF: Obj4B_Index
 		move.b	($FFFFFEC3).w,$1A(a0)
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -12264,7 +12268,7 @@ Obj4B_Collect:				; XREF: Obj4B_Index
 		move.w	8(a0),8(a1)
 		move.w	$C(a0),$C(a1)
 		move.l	a0,$3C(a1)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		cmp.w	8(a0),d0	; has Sonic come from the left?
 		bcs.s	Obj4B_PlaySnd	; if yes, branch
 		bset	#0,1(a1)	; reverse flash	object
@@ -12306,7 +12310,7 @@ Obj7C_ChkDel:				; XREF: Obj7C_Index
 		bsr.s	Obj7C_Collect
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -12328,7 +12332,7 @@ Obj7C_Collect:				; XREF: Obj7C_ChkDel
 		bne.s	locret_9F76	; if not, branch
 		movea.l	$3C(a0),a1
 		move.b	#6,$24(a1)	; delete giant ring object (Obj4B)
-		move.b	#$1C,($FFFFD01C).w ; make Sonic	invisible
+		move.b	#$1C,(Object_RAM+$1C).w ; make Sonic	invisible
 		move.b	#1,($FFFFF7CD).w ; stop	Sonic getting bonuses
 		clr.b	($FFFFFE2D).w	; remove invincibility
 		clr.b	($FFFFFE2C).w	; remove shield
@@ -12339,7 +12343,7 @@ locret_9F76:
 
 Obj7C_End:				; XREF: Obj7C_Collect
 		addq.b	#2,$24(a0)
-		move.w	#0,($FFFFD000).w ; remove Sonic	object
+		move.w	#0,(Object_RAM).w ; remove Sonic	object
 		addq.l	#4,sp
 		rts	
 ; End of function Obj7C_Collect
@@ -12507,7 +12511,7 @@ Obj26_Display:				; XREF: Obj26_Index
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -12607,7 +12611,7 @@ Obj2E_ChkShoes:
 		cmpi.b	#3,d0		; does monitor contain speed shoes?
 		bne.s	Obj2E_ChkShield
 		move.b	#1,($FFFFFE2E).w ; speed up the	BG music
-		move.w	#$4B0,($FFFFD034).w ; time limit for the power-up
+		move.w	#$4B0,(Object_RAM+$34).w ; time limit for the power-up
 		move.w	#$C00,($FFFFF760).w ; change Sonic's top speed
 		move.w	#$18,($FFFFF762).w
 		move.w	#$80,($FFFFF764).w
@@ -12619,7 +12623,7 @@ Obj2E_ChkShield:
 		cmpi.b	#4,d0		; does monitor contain a shield?
 		bne.s	Obj2E_ChkInvinc
 		move.b	#1,($FFFFFE2C).w ; give	Sonic a	shield
-		move.b	#$38,($FFFFD180).w ; load shield object	($38)
+		move.b	#$38,(Object_RAM+$180).w ; load shield object	($38)
 		move.w	#$AF,d0
 		jmp	(PlaySound).l	; play shield sound
 ; ===========================================================================
@@ -12628,15 +12632,15 @@ Obj2E_ChkInvinc:
 		cmpi.b	#5,d0		; does monitor contain invincibility?
 		bne.s	Obj2E_ChkRings
 		move.b	#1,($FFFFFE2D).w ; make	Sonic invincible
-		move.w	#$4B0,($FFFFD032).w ; time limit for the power-up
-		move.b	#$38,($FFFFD200).w ; load stars	object ($3801)
-		move.b	#1,($FFFFD21C).w
-		move.b	#$38,($FFFFD240).w ; load stars	object ($3802)
-		move.b	#2,($FFFFD25C).w
-		move.b	#$38,($FFFFD280).w ; load stars	object ($3803)
-		move.b	#3,($FFFFD29C).w
-		move.b	#$38,($FFFFD2C0).w ; load stars	object ($3804)
-		move.b	#4,($FFFFD2DC).w
+		move.w	#$4B0,(Object_RAM+$32).w ; time limit for the power-up
+		move.b	#$38,(Object_RAM+$200).w ; load stars	object ($3801)
+		move.b	#1,(Object_RAM+$21C).w
+		move.b	#$38,(Object_RAM+$240).w ; load stars	object ($3802)
+		move.b	#2,(Object_RAM+$25C).w
+		move.b	#$38,(Object_RAM+$280).w ; load stars	object ($3803)
+		move.b	#3,(Object_RAM+$29C).w
+		move.b	#$38,(Object_RAM+$2C0).w ; load stars	object ($3804)
+		move.b	#4,(Object_RAM+$2DC).w
 		tst.b	($FFFFF7AA).w	; is boss mode on?
 		bne.s	Obj2E_NoMusic	; if yes, branch
 		move.w	#$87,d0
@@ -12687,7 +12691,7 @@ Obj2E_Delete:				; XREF: Obj2E_Index
 
 
 Obj26_SolidSides:			; XREF: loc_A1EC
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		add.w	d1,d0
@@ -12708,7 +12712,7 @@ Obj26_SolidSides:			; XREF: loc_A1EC
 		bcc.s	loc_A4E6
 		tst.b	($FFFFF7C8).w
 		bmi.s	loc_A4E6
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	loc_A4E6
 		tst.w	($FFFFFE08).w
 		bne.s	loc_A4E6
@@ -13198,7 +13202,7 @@ Obj2D_ChkSonic:				; XREF: Obj2D_Index2
 		move.w	#$60,d2
 		bsr.w	Obj2D_ChkSonic2
 		bcc.s	locret_AE20
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		sub.w	$C(a0),d0
 		bcc.s	locret_AE20
 		cmpi.w	#-$80,d0
@@ -13218,7 +13222,7 @@ locret_AE20:
 Obj2D_ChkSonic2:			; XREF: Obj2D_ChkSonic
 		move.w	#$80,d1
 		bset	#0,$22(a0)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_AE40
 		neg.w	d0
@@ -13473,7 +13477,7 @@ Obj2F_ChkDel:				; XREF: Obj2F_Display
 loc_B0C6:
 		move.w	$2A(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -13623,7 +13627,7 @@ Obj30:					; XREF: Obj_Index
 		jsr	Obj30_Index(pc,d1.w)
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -13987,7 +13991,7 @@ loc_B798:				; XREF: Obj31_Index
 		cmpi.b	#$10,$32(a0)
 		bcc.s	Obj31_Display
 		movea.l	a0,a2
-		lea	($FFFFD000).w,a0
+		lea	(Object_RAM).w,a0
 		jsr	KillSonic
 		movea.l	a2,a0
 
@@ -14018,7 +14022,7 @@ Obj31_Display2:				; XREF: Obj31_Index
 Obj31_ChkDel:				; XREF: Obj31_Display
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -14149,7 +14153,7 @@ loc_B97C:
 ; ===========================================================================
 
 Obj31_Type03:				; XREF: Obj31_TypeIndex
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_B98C
 		neg.w	d0
@@ -14268,7 +14272,7 @@ Obj45_Display:				; XREF: Obj45_Index
 Obj45_ChkDel:				; XREF: Obj45_Solid
 		move.w	$3A(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -14426,7 +14430,7 @@ Obj32_Display:
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -14450,7 +14454,7 @@ Obj32_MZBlock:				; XREF: Obj32_Pressed
 		subq.w	#8,d3
 		move.w	#$20,d4
 		move.w	#$10,d5
-		lea	($FFFFD800).w,a1 ; begin checking object RAM
+		lea	(Object_RAM+$800).w,a1 ; begin checking object RAM
 		move.w	#$5F,d6
 
 Obj32_MZLoop:
@@ -14604,7 +14608,7 @@ loc_BF6E:				; XREF: Obj33_Index
 loc_BFC6:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -14616,7 +14620,7 @@ loc_BFC6:
 loc_BFE6:
 		move.w	$34(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -14727,7 +14731,7 @@ loc_C0E6:
 
 loc_C104:
 		move.w	(sp)+,d4
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		bclr	#3,$22(a1)
 		bclr	#3,$22(a0)
 		bra.w	loc_BFE6
@@ -14872,7 +14876,7 @@ loc_C268:
 		move.w	#-$40,d1
 
 loc_C294:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		add.w	d0,8(a1)
 		move.w	d1,$14(a1)
 		move.w	#0,$10(a1)
@@ -15228,7 +15232,7 @@ loc_C610:				; XREF: loc_C61A
 ; ===========================================================================
 
 loc_C61A:				; XREF: Obj3A_ChkPos
-		cmpi.b	#$E,($FFFFD724).w
+		cmpi.b	#$E,(Object_RAM+$724).w
 		beq.s	loc_C610
 		cmpi.b	#4,$1A(a0)
 		bne.s	loc_C5FE
@@ -15353,8 +15357,8 @@ Obj3A_SBZ2:				; XREF: Obj3A_ChkPos2
 ; ===========================================================================
 
 loc_C766:				; XREF: Obj3A_Index
-		addq.w	#2,($FFFFF72A).w
-		cmpi.w	#$2100,($FFFFF72A).w
+		addq.w	#2,(Camera_RAM+$2A).w
+		cmpi.w	#$2100,(Camera_RAM+$2A).w
 		beq.w	DeleteObject
 		rts	
 ; ===========================================================================
@@ -15464,7 +15468,7 @@ loc_C86C:				; XREF: Obj7E_ChkPos
 		bne.s	loc_C85A
 		addq.b	#2,$24(a0)
 		move.w	#180,$1E(a0)	; set time delay to 3 seconds
-		move.b	#$7F,($FFFFD800).w ; load chaos	emerald	object
+		move.b	#$7F,(Object_RAM+$800).w ; load chaos	emerald	object
 
 Obj7E_Wait:				; XREF: Obj7E_Index
 		subq.w	#1,$1E(a0)	; subtract 1 from time delay
@@ -15510,8 +15514,8 @@ Obj7E_Exit:				; XREF: Obj7E_Index
 ; ===========================================================================
 
 Obj7E_Continue:				; XREF: Obj7E_Index
-		move.b	#4,($FFFFD6DA).w
-		move.b	#$14,($FFFFD6E4).w
+		move.b	#4,(Object_RAM+$6DA).w
+		move.b	#$14,(Object_RAM+$6E4).w
 		move.w	#$BF,d0
 		jsr	(PlaySound_Special).l ;	play continues music
 		addq.b	#2,$24(a0)
@@ -15939,7 +15943,7 @@ Obj36_Hurt:				; XREF: Obj36_SideWays; Obj36_Upright
 		bne.s	Obj36_Display	; if yes, branch
 		move.l	a0,-(sp)
 		movea.l	a0,a2
-		lea	($FFFFD000).w,a0
+		lea	(Object_RAM).w,a0
 		cmpi.b	#4,$24(a0)
 		bcc.s	loc_CF20
 		move.l	$C(a0),d3
@@ -15957,7 +15961,7 @@ Obj36_Display:
 		bsr.w	DisplaySprite
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -16072,7 +16076,7 @@ Obj3B_Solid:				; XREF: Obj3B_Index
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -16108,7 +16112,7 @@ Obj49_PlaySnd:				; XREF: Obj49_Index
 Obj49_ChkDel:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -16149,7 +16153,7 @@ Obj3C_Main:				; XREF: Obj3C_Index
 		move.b	$28(a0),$1A(a0)
 
 Obj3C_Solid:				; XREF: Obj3C_Index
-		move.w	($FFFFD010).w,$30(a0) ;	load Sonic's horizontal speed
+		move.w	(Object_RAM+$10).w,$30(a0) ;	load Sonic's horizontal speed
 		move.w	#$1B,d1
 		move.w	#$20,d2
 		move.w	#$20,d3
@@ -16286,10 +16290,10 @@ Map_obj3C:
 
 
 ObjectsLoad:				; XREF: TitleScreen; et al
-		lea	($FFFFD000).w,a0 ; set address for object RAM
+		lea	(Object_RAM).w,a0 ; set address for object RAM
 		moveq	#$7F,d7
 		moveq	#0,d0
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.s	loc_D362
 
 loc_D348:
@@ -16739,13 +16743,13 @@ locret_D87C:
 
 ChkObjOnScreen:
 		move.w	8(a0),d0	; get object x-position
-		sub.w	($FFFFF700).w,d0 ; subtract screen x-position
+		sub.w	(Camera_Horizontal_Pos).w,d0 ; subtract screen x-position
 		bmi.s	NotOnScreen
 		cmpi.w	#320,d0		; is object on the screen?
 		bge.s	NotOnScreen	; if not, branch
 
 		move.w	$C(a0),d1	; get object y-position
-		sub.w	($FFFFF704).w,d1 ; subtract screen y-position
+		sub.w	(Camera_Vertical_Pos).w,d1 ; subtract screen y-position
 		bmi.s	NotOnScreen
 		cmpi.w	#224,d1		; is object on the screen?
 		bge.s	NotOnScreen	; if not, branch
@@ -16767,7 +16771,7 @@ ChkObjOnScreen2:
 		moveq	#0,d1
 		move.b	$19(a0),d1
 		move.w	8(a0),d0
-		sub.w	($FFFFF700).w,d0
+		sub.w	(Camera_Horizontal_Pos).w,d0
 		add.w	d1,d0
 		bmi.s	NotOnScreen2
 		add.w	d1,d1
@@ -16776,7 +16780,7 @@ ChkObjOnScreen2:
 		bge.s	NotOnScreen2
 
 		move.w	$C(a0),d1
-		sub.w	($FFFFF704).w,d1
+		sub.w	(Camera_Vertical_Pos).w,d1
 		bmi.s	NotOnScreen2
 		cmpi.w	#224,d1
 		bge.s	NotOnScreen2
@@ -16832,7 +16836,7 @@ OPL_ClrList:
 
 		lea	($FFFFFC00).w,a2
 		moveq	#0,d2
-		move.w	($FFFFF700).w,d6
+		move.w	(Camera_Horizontal_Pos).w,d6
 		subi.w	#$80,d6
 		bcc.s	loc_D93C
 		moveq	#0,d6
@@ -16879,7 +16883,7 @@ loc_D976:
 OPL_Next:				; XREF: OPL_Index
 		lea	($FFFFFC00).w,a2
 		moveq	#0,d2
-		move.w	($FFFFF700).w,d6
+		move.w	(Camera_Horizontal_Pos).w,d6
 		andi.w	#$FF80,d6
 		cmp.w	($FFFFF76E).w,d6
 		beq.w	locret_DA3A
@@ -17019,7 +17023,7 @@ locret_DA8A:
 
 
 SingleObjLoad:
-		lea	($FFFFD800).w,a1 ; start address for object RAM
+		lea	(Object_RAM+$800).w,a1 ; start address for object RAM
 		move.w	#$5F,d0
 
 loc_DA94:
@@ -17067,7 +17071,7 @@ Obj41:					; XREF: Obj_Index
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -17304,7 +17308,7 @@ Obj42_Index2:	dc.w Obj42_ChkDist-Obj42_Index2
 
 Obj42_ChkDist:				; XREF: Obj42_Index2
 		bset	#0,$22(a0)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_DDEA
 		neg.w	d0
@@ -17329,7 +17333,7 @@ Obj42_Type00:				; XREF: Obj42_Index2
 		cmpi.b	#4,$1A(a0)	; has "appearing" animation finished?
 		bcc.s	Obj42_Fall	; is yes, branch
 		bset	#0,$22(a0)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	locret_DE32
 		bclr	#0,$22(a0)
@@ -17477,7 +17481,7 @@ Obj43_Action:				; XREF: Obj43_Index
 		bsr.w	AnimateSprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -17503,7 +17507,7 @@ Obj43_Index2:	dc.w Obj43_RollChk-Obj43_Index2
 ; ===========================================================================
 
 Obj43_RollChk:				; XREF: Obj43_Index2
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		subi.w	#$100,d0
 		bcs.s	loc_E0D2
 		sub.w	8(a0),d0	; check	distance between Roller	and Sonic
@@ -17578,7 +17582,7 @@ locret_E150:
 Obj43_Stop:				; XREF: Obj43_ChkJump
 		tst.b	$32(a0)
 		bmi.s	locret_E188
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		subi.w	#$30,d0
 		sub.w	8(a0),d0
 		bcc.s	locret_E188
@@ -17642,7 +17646,7 @@ Obj44_Display:				; XREF: Obj44_Index
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -17770,7 +17774,7 @@ Obj14_Action:				; XREF: Obj14_Index
 Obj14_ChkDel:				; XREF: Obj13
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -17930,7 +17934,7 @@ loc_E57A:
 Obj6D_ChkDel:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -17993,7 +17997,7 @@ Obj46_ChkDel:
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -18013,7 +18017,7 @@ Obj46_Type00:				; XREF: Obj46_TypeIndex
 ; ===========================================================================
 
 Obj46_Type02:				; XREF: Obj46_TypeIndex
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_E888
 		neg.w	d0
@@ -18108,7 +18112,7 @@ Obj12_Animate:				; XREF: Obj12_Index
 Obj12_ChkDel:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -18150,7 +18154,7 @@ Obj47_Hit:				; XREF: Obj47_Index
 		tst.b	$21(a0)		; has Sonic touched the	bumper?
 		beq.w	Obj47_Display	; if not, branch
 		clr.b	$21(a0)
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a0),d1
 		move.w	$C(a0),d2
 		sub.w	8(a1),d1
@@ -18193,7 +18197,7 @@ Obj47_Display:
 		bsr.w	AnimateSprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -18236,7 +18240,7 @@ Obj0D:					; XREF: Obj_Index
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -18260,7 +18264,7 @@ Obj0D_Main:				; XREF: Obj0D_Index
 		move.b	#4,$18(a0)
 
 Obj0D_Touch:				; XREF: Obj0D_Index
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcs.s	locret_EBBA
 		cmpi.w	#$20,d0		; is Sonic within $20 pixels of	the signpost?
@@ -18268,7 +18272,7 @@ Obj0D_Touch:				; XREF: Obj0D_Index
 		move.w	#$CF,d0
 		jsr	(PlaySound).l	; play signpost	sound
 		clr.b	($FFFFFE1E).w	; stop time counter
-		move.w	($FFFFF72A).w,($FFFFF728).w ; lock screen position
+		move.w	(Camera_RAM+$2A).w,(Camera_RAM+$28).w ; lock screen position
 		addq.b	#2,$24(a0)
 
 locret_EBBA:
@@ -18327,16 +18331,16 @@ Obj0D_SparkPos:	dc.b -$18,-$10		; x-position, y-position
 Obj0D_SonicRun:				; XREF: Obj0D_Index
 		tst.w	($FFFFFE08).w	; is debug mode	on?
 		bne.w	locret_ECEE	; if yes, branch
-		btst	#1,($FFFFD022).w
+		btst	#1,(Object_RAM+$22).w
 		bne.s	loc_EC70
 		move.b	#1,($FFFFF7CC).w ; lock	controls
 		move.w	#$800,($FFFFF602).w ; make Sonic run to	the right
 
 loc_EC70:
-		tst.b	($FFFFD000).w
+		tst.b	(Object_RAM).w
 		beq.s	loc_EC86
-		move.w	($FFFFD008).w,d0
-		move.w	($FFFFF72A).w,d1
+		move.w	(Object_RAM+$08).w,d0
+		move.w	(Camera_RAM+$2A).w,d1
 		addi.w	#$128,d1
 		cmp.w	d1,d0
 		bcs.s	locret_ECEE
@@ -18352,12 +18356,12 @@ loc_EC86:
 
 
 GotThroughAct:				; XREF: Obj3E_EndAct
-		tst.b	($FFFFD5C0).w
+		tst.b	(Object_RAM+$5C0).w
 		bne.s	locret_ECEE
-		move.w	($FFFFF72A).w,($FFFFF728).w
+		move.w	(Camera_RAM+$2A).w,(Camera_RAM+$28).w
 		clr.b	($FFFFFE2D).w	; disable invincibility
 		clr.b	($FFFFFE1E).w	; stop time counter
-		move.b	#$3A,($FFFFD5C0).w
+		move.b	#$3A,(Object_RAM+$5C0).w
 		moveq	#$10,d0
 		jsr	(LoadPLC2).l	; load title card patterns
 		move.b	#1,($FFFFF7D6).w
@@ -18436,7 +18440,7 @@ loc_EDCC:				; XREF: Obj4C_Index
 		subq.w	#1,$32(a0)
 		bpl.s	locret_EDF0
 		move.w	$34(a0),$32(a0)
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		move.w	$C(a0),d1
 		cmp.w	d1,d0
 		bcc.s	locret_EDF0
@@ -18594,7 +18598,7 @@ Obj4D_Action:				; XREF: Obj4D_Index
 Obj4D_ChkDel:				; XREF: Obj4C
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -18718,7 +18722,7 @@ loc_F0C8:
 		move.b	#4,$1A(a1)
 
 Obj4E_Action:				; XREF: Obj4E_Index
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	Obj4E_ChkSonic
 		neg.w	d0
@@ -18726,7 +18730,7 @@ Obj4E_Action:				; XREF: Obj4E_Index
 Obj4E_ChkSonic:
 		cmpi.w	#$C0,d0		; is Sonic within $C0 pixels (x-axis)?
 		bcc.s	Obj4E_Move	; if not, branch
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		sub.w	$C(a0),d0
 		bcc.s	loc_F0F4
 		neg.w	d0
@@ -18763,7 +18767,7 @@ Obj4E_Solid:				; XREF: Obj4E_Index
 Obj4E_Animate:
 		lea	(Ani_obj4E).l,a1
 		bsr.w	AnimateSprite
-		cmpi.b	#4,($FFFFD024).w
+		cmpi.b	#4,(Object_RAM+$24).w
 		bcc.s	Obj4E_ChkDel
 		bsr.w	SpeedToPos
 
@@ -18773,7 +18777,7 @@ Obj4E_ChkDel:
 		bne.s	locret_F17E
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -18832,7 +18836,7 @@ Obj54_Main:				; XREF: Obj54_Index
 Obj54_ChkDel:				; XREF: Obj54_Index
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -18926,7 +18930,7 @@ Obj40_Action:				; XREF: Obj40_Index
 MarkObjGone:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -19164,7 +19168,7 @@ SolidObject:
 		beq.w	loc_FAC8
 		move.w	d1,d2
 		add.w	d2,d2
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		btst	#1,$22(a1)
 		bne.s	loc_F9FE
 		move.w	8(a1),d0
@@ -19194,7 +19198,7 @@ SolidObject71:				; XREF: Obj71_Solid
 		beq.w	loc_FAD0
 		move.w	d1,d2
 		add.w	d2,d2
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		btst	#1,$22(a1)
 		bne.s	loc_FA44
 		move.w	8(a1),d0
@@ -19220,7 +19224,7 @@ loc_FA58:
 ; ===========================================================================
 
 SolidObject2F:				; XREF: Obj2F_Solid
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		tst.b	1(a0)
 		bpl.w	loc_FB92
 		move.w	8(a1),d0
@@ -19264,7 +19268,7 @@ loc_FAC8:
 		bpl.w	loc_FB92
 
 loc_FAD0:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		add.w	d1,d0
@@ -19289,7 +19293,7 @@ loc_FAD0:
 loc_FB0E:
 		tst.b	($FFFFF7C8).w
 		bmi.w	loc_FB92
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.w	loc_FB92
 		tst.w	($FFFFFE08).w
 		bne.w	loc_FBAC
@@ -19486,7 +19490,7 @@ Obj51_Main:				; XREF: Obj51_Index
 
 Obj51_Solid:				; XREF: Obj51_Index
 		move.w	($FFFFF7D0).w,$34(a0)
-		move.b	($FFFFD01C).w,$32(a0) ;	load Sonic's animation number
+		move.b	(Object_RAM+$1C).w,$32(a0) ;	load Sonic's animation number
 		move.w	#$1B,d1
 		move.w	#$10,d2
 		move.w	#$11,d3
@@ -19636,7 +19640,7 @@ Obj52_StandOn:				; XREF: Obj52_Index
 Obj52_ChkDel:				; XREF: Obj52_Platform
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -19744,7 +19748,7 @@ Obj52_07_ChkDel:
 		addq.l	#4,sp
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -19868,7 +19872,7 @@ Obj55_ChkDrop:				; XREF: Obj55_Index2
 		move.w	#$80,d2
 		bsr.w	Obj55_ChkSonic
 		bcc.s	Obj55_NoDrop
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		move.w	d0,$36(a0)
 		sub.w	$C(a0),d0
 		bcs.s	Obj55_NoDrop
@@ -19921,7 +19925,7 @@ Obj55_PlaySnd:				; XREF: Obj55_Index2
 
 loc_101A0:
 		bsr.w	SpeedToPos
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_101B0
 		neg.w	d0
@@ -19959,7 +19963,7 @@ locret_101F4:
 Obj55_ChkSonic:				; XREF: Obj55_ChkDrop
 		move.w	#$100,d1
 		bset	#0,$22(a0)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_10214
 		neg.w	d0
@@ -20094,7 +20098,7 @@ Obj56_Action:				; XREF: Obj56_Index
 Obj56_ChkDel:
 		move.w	$34(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -20173,7 +20177,7 @@ Obj56_Type05:				; XREF: Obj56_TypeIndex
 		cmpi.b	#3,$3C(a0)
 		bne.s	loc_1047A
 		clr.b	($FFFFF7C9).w
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		cmp.w	8(a0),d0
 		bcc.s	loc_1047A
 		move.b	#1,($FFFFF7C9).w
@@ -20593,7 +20597,7 @@ Obj57_MoveLoop:
 Obj57_ChkDel:				; XREF: Obj57_Move
 		move.w	$3A(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -20679,7 +20683,7 @@ Obj58_Move:				; XREF: Obj58_Index
 		jsr	Obj58_TypeIndex(pc,d1.w)
 		move.w	$3A(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -20767,7 +20771,7 @@ Obj59:					; XREF: Obj_Index
 		jsr	Obj59_Index(pc,d1.w)
 		move.w	$32(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -21007,7 +21011,7 @@ Obj59_ChkDel:
 		addq.l	#4,sp
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -21033,7 +21037,7 @@ Obj5A:					; XREF: Obj_Index
 		jsr	Obj5A_Index(pc,d1.w)
 		move.w	$32(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -21155,7 +21159,7 @@ Obj5B:					; XREF: Obj_Index
 		jsr	Obj5B_Index(pc,d1.w)
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -21350,12 +21354,12 @@ Obj5C_Main:				; XREF: Obj5C_Index
 		move.b	#$10,$19(a0)
 
 Obj5C_Display:				; XREF: Obj5C_Index
-		move.l	($FFFFF700).w,d1
+		move.l	(Camera_Horizontal_Pos).w,d1
 		add.l	d1,d1
 		swap	d1
 		neg.w	d1
 		move.w	d1,8(a0)
-		move.l	($FFFFF704).w,d1
+		move.l	(Camera_Vertical_Pos).w,d1
 		add.l	d1,d1
 		swap	d1
 		andi.w	#$3F,d1
@@ -21394,7 +21398,7 @@ Obj1B_Main:				; XREF: Obj1B_Index
 		move.w	8(a0),$30(a0)
 
 Obj1B_Action:				; XREF: Obj1B_Index
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		andi.w	#$FFE0,d1
 		add.w	$30(a0),d1
 		btst	#0,($FFFFFE05).w
@@ -21479,7 +21483,7 @@ Obj0B_Action:				; XREF: Obj0B_Index
 ; ===========================================================================
 
 Obj0B_MoveUp:				; XREF: Obj0B_Action
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	$C(a0),d0
 		subi.w	#$18,d0
 		btst	#0,($FFFFF604).w ; check if "up" is pressed
@@ -21515,7 +21519,7 @@ Obj0B_Release:				; XREF: Obj0B_Action
 Obj0B_Grab:				; XREF: Obj0B_Action
 		tst.b	$21(a0)		; has Sonic touched the	pole?
 		beq.s	Obj0B_Display	; if not, branch
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a0),d0
 		addi.w	#$14,d0
 		cmp.w	8(a1),d0
@@ -21585,7 +21589,7 @@ Obj0C_Solid:
 		clr.b	($FFFFF7C9).w	; enable wind tunnel
 		tst.b	$1A(a0)		; is the door open?
 		bne.s	Obj0C_Display	; if yes, branch
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		cmp.w	8(a0),d0	; is Sonic in front of the door?
 		bcc.s	Obj0C_Display	; if yes, branch
 		move.b	#1,($FFFFF7C9).w ; disable wind	tunnel
@@ -21655,7 +21659,7 @@ Obj71_Solid:				; XREF: Obj71_Index
 Obj71_ChkDel:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -21715,7 +21719,7 @@ Obj5D_Delay:				; XREF: Obj5D_Index
 Obj5D_Blow:
 		tst.b	$32(a0)		; is fan switched on?
 		bne.w	Obj5D_ChkDel	; if not, branch
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		btst	#0,$22(a0)
@@ -21776,7 +21780,7 @@ Obj5D_ChkDel:				; XREF: Obj5D_Animate
 		bsr.w	DisplaySprite
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -21802,7 +21806,7 @@ Obj5E:					; XREF: Obj_Index
 		jsr	Obj5E_Index(pc,d1.w)
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -21855,7 +21859,7 @@ Obj5E_Slope:				; XREF: Obj5E_Index
 		lea	(Obj5E_Data2).l,a2
 
 loc_11702:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	$12(a1),$38(a0)
 		move.w	#$30,d1
 		jsr	(SlopeObject).l
@@ -21880,7 +21884,7 @@ loc_11730:
 
 loc_1174A:				; XREF: Obj5E_Slope2
 		moveq	#2,d1
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a0),d0
 		sub.w	8(a1),d0
 		bcc.s	loc_1175E
@@ -22032,7 +22036,7 @@ Obj5E_Spring:
 		beq.s	loc_1192C
 		clr.b	$25(a1)
 		move.b	#2,$24(a1)
-		lea	($FFFFD000).w,a2
+		lea	(Object_RAM).w,a2
 		move.w	$12(a0),$12(a2)
 		neg.w	$12(a2)
 		bset	#1,$22(a2)
@@ -22160,7 +22164,7 @@ locret_11AD0:
 ; ===========================================================================
 
 Obj5F_ChkSonic:				; XREF: Obj5F_Walk; Obj5F_Wait
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_11ADE
 		neg.w	d0
@@ -22168,7 +22172,7 @@ Obj5F_ChkSonic:				; XREF: Obj5F_Walk; Obj5F_Wait
 loc_11ADE:
 		cmpi.w	#$60,d0
 		bcc.s	locret_11B5E
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		sub.w	$C(a0),d0
 		bcc.s	Obj5F_MakeFuse
 		neg.w	d0
@@ -22352,7 +22356,7 @@ locret_11DBC:
 ; ===========================================================================
 
 Obj60_ChkSonic:				; XREF: Obj60_Index
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_11DCA
 		neg.w	d0
@@ -22360,7 +22364,7 @@ Obj60_ChkSonic:				; XREF: Obj60_Index
 loc_11DCA:
 		cmpi.w	#$A0,d0		; is Sonic within $A0 pixels of	orbinaut?
 		bcc.s	Obj60_Animate	; if not, branch
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		sub.w	$C(a0),d0
 		bcc.s	loc_11DDC
 		neg.w	d0
@@ -22384,7 +22388,7 @@ Obj60_Display:				; XREF: Obj60_Index
 Obj60_ChkDel:				; XREF: Obj60_Animate
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -22597,7 +22601,7 @@ Obj61_Action:				; XREF: Obj61_Index
 Obj61_ChkDel:
 		move.w	$34(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -22859,7 +22863,7 @@ Obj63:					; XREF: Obj_Index
 		jsr	Obj63_Index(pc,d1.w)
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -23224,7 +23228,7 @@ Obj64_Wobble:				; XREF: Obj64_ChkWater
 		bsr.w	ResumeMusic	; cancel countdown music
 		move.w	#$AD,d0
 		jsr	(PlaySound_Special).l ;	play collecting	bubble sound
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		clr.w	$10(a1)
 		clr.w	$12(a1)
 		clr.w	$14(a1)
@@ -23355,7 +23359,7 @@ loc_12914:
 Obj64_ChkDel:				; XREF: Obj64_BblMaker
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -23377,7 +23381,7 @@ Obj64_BblTypes:	dc.b 0,	1, 0, 0, 0, 0, 1, 0, 0,	0, 0, 1, 0, 1, 0, 0, 1,	0
 Obj64_ChkSonic:				; XREF: Obj64_Wobble
 		tst.b	($FFFFF7C8).w
 		bmi.s	loc_12998
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		move.w	8(a0),d1
 		subi.w	#$10,d1
@@ -23513,7 +23517,6 @@ Obj01_Index:	dc.w Obj01_Main-Obj01_Index
 ; ===========================================================================
 
 Obj01_Main:				; XREF: Obj01_Index
-		move.b	#$00,($FFFFFFF7).w			; MJ: set collision to 1st
 		addq.b	#2,$24(a0)
 		move.b	#$13,$16(a0)
 		move.b	#9,$17(a0)
@@ -23525,6 +23528,7 @@ Obj01_Main:				; XREF: Obj01_Index
 		move.w	#$600,($FFFFF760).w ; Sonic's top speed
 		move.w	#$C,($FFFFF762).w ; Sonic's acceleration
 		move.w	#$80,($FFFFF764).w ; Sonic's deceleration
+		move.b	#$00,($FFFFFFF7).w			; MJ: set collision to 1st
 
 Obj01_Control:				; XREF: Obj01_Index
 		tst.w	($FFFFFFFA).w	; is debug cheat enabled?
@@ -23605,15 +23609,7 @@ Obj01_ChkInvin:
 		bne.s	Obj01_RmvInvin
 		cmpi.w	#$C,($FFFFFE14).w
 		bcs.s	Obj01_RmvInvin
-		moveq	#0,d0
-		move.b	($FFFFFE10).w,d0
-		cmpi.w	#$103,($FFFFFE10).w ; check if level is	SBZ3
-		bne.s	Obj01_PlayMusic
-		moveq	#5,d0		; play SBZ music
-
-Obj01_PlayMusic:
-		lea	(MusicList2).l,a1
-		move.b	(a1,d0.w),d0
+		move.w	($FFFFFF90).w,d0
 		jsr	(PlaySound).l	; play normal music
 
 Obj01_RmvInvin:
@@ -23676,8 +23672,8 @@ Obj01_InWater:
 		bset	#6,$22(a0)
 		bne.s	locret_12D80
 		bsr.w	ResumeMusic
-		move.b	#$A,($FFFFD340).w ; load bubbles object	from Sonic's mouth
-		move.b	#$81,($FFFFD368).w
+		move.b	#$A,(Object_RAM+$340).w ; load bubbles object	from Sonic's mouth
+		move.b	#$81,(Object_RAM+$368).w
 		move.w	#$300,($FFFFF760).w ; change Sonic's top speed
 		move.w	#6,($FFFFF762).w ; change Sonic's acceleration
 		move.w	#$40,($FFFFF764).w ; change Sonic's deceleration
@@ -23685,7 +23681,7 @@ Obj01_InWater:
 		asr	$12(a0)
 		asr	$12(a0)
 		beq.s	locret_12D80
-		move.b	#8,($FFFFD300).w ; load	splash object
+		move.b	#8,(Object_RAM+$300).w ; load	splash object
 		move.w	#$AA,d0
 		jmp	(PlaySound_Special).l ;	play splash sound
 ; ===========================================================================
@@ -23699,7 +23695,7 @@ Obj01_OutWater:
 		move.w	#$80,($FFFFF764).w ; restore Sonic's deceleration
 		asl	$12(a0)
 		beq.w	locret_12D80
-		move.b	#8,($FFFFD300).w ; load	splash object
+		move.b	#8,(Object_RAM+$300).w ; load	splash object
 		cmpi.w	#-$1000,$12(a0)
 		bgt.s	loc_12E0E
 		move.w	#-$1000,$12(a0)	; set maximum speed on leaving water
@@ -23803,7 +23799,7 @@ Obj01_NotRight:
 		moveq	#0,d0
 		move.b	$3D(a0),d0
 		lsl.w	#6,d0
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		lea	(a1,d0.w),a1
 		tst.b	$22(a1)
 		bmi.s	Sonic_LookUp
@@ -23849,9 +23845,9 @@ Sonic_LookUp:
 		btst	#0,($FFFFF602).w ; is up being pressed?
 		beq.s	Sonic_Duck	; if not, branch
 		move.b	#7,$1C(a0)	; use "looking up" animation
-		cmpi.w	#$C8,($FFFFF73E).w
+		cmpi.w	#$C8,(Camera_RAM+$3E).w
 		beq.s	loc_12FC2
-		addq.w	#2,($FFFFF73E).w
+		addq.w	#2,(Camera_RAM+$3E).w
 		bra.s	loc_12FC2
 ; ===========================================================================
 
@@ -23859,20 +23855,20 @@ Sonic_Duck:
 		btst	#1,($FFFFF602).w ; is down being pressed?
 		beq.s	Obj01_ResetScr	; if not, branch
 		move.b	#8,$1C(a0)	; use "ducking"	animation
-		cmpi.w	#8,($FFFFF73E).w
+		cmpi.w	#8,(Camera_RAM+$3E).w
 		beq.s	loc_12FC2
-		subq.w	#2,($FFFFF73E).w
+		subq.w	#2,(Camera_RAM+$3E).w
 		bra.s	loc_12FC2
 ; ===========================================================================
 
 Obj01_ResetScr:
-		cmpi.w	#$60,($FFFFF73E).w ; is	screen in its default position?
+		cmpi.w	#$60,(Camera_RAM+$3E).w ; is	screen in its default position?
 		beq.s	loc_12FC2	; if yes, branch
 		bcc.s	loc_12FBE
-		addq.w	#4,($FFFFF73E).w ; move	screen back to default
+		addq.w	#4,(Camera_RAM+$3E).w ; move	screen back to default
 
 loc_12FBE:
-		subq.w	#2,($FFFFF73E).w ; move	screen back to default
+		subq.w	#2,(Camera_RAM+$3E).w ; move	screen back to default
 
 loc_12FC2:
 		move.b	($FFFFF602).w,d0
@@ -24219,13 +24215,13 @@ Obj01_JumpMove:
 		move.w	d0,$10(a0)	; change Sonic's horizontal speed
 
 Obj01_ResetScr2:
-		cmpi.w	#$60,($FFFFF73E).w ; is	the screen in its default position?
+		cmpi.w	#$60,(Camera_RAM+$3E).w ; is	the screen in its default position?
 		beq.s	loc_132A4	; if yes, branch
 		bcc.s	loc_132A0
-		addq.w	#4,($FFFFF73E).w
+		addq.w	#4,(Camera_RAM+$3E).w
 
 loc_132A0:
-		subq.w	#2,($FFFFF73E).w
+		subq.w	#2,(Camera_RAM+$3E).w
 
 loc_132A4:
 		cmpi.w	#-$400,$12(a0)	; is Sonic moving faster than -$400 upwards?
@@ -24288,11 +24284,11 @@ Sonic_LevelBound:			; XREF: Obj01_MdNormal; et al
 		asl.l	#8,d0
 		add.l	d0,d1
 		swap	d1
-		move.w	($FFFFF728).w,d0
+		move.w	(Camera_RAM+$28).w,d0
 		addi.w	#$10,d0
 		cmp.w	d1,d0		; has Sonic touched the	side boundary?
 		bhi.s	Boundary_Sides	; if yes, branch
-		move.w	($FFFFF72A).w,d0
+		move.w	(Camera_RAM+$2A).w,d0
 		addi.w	#$128,d0
 		tst.b	($FFFFF7AA).w
 		bne.s	loc_13332
@@ -24303,7 +24299,7 @@ loc_13332:
 		bls.s	Boundary_Sides	; if yes, branch
 
 loc_13336:
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$E0,d0
 		cmp.w	$C(a0),d0	; has Sonic touched the	bottom boundary?
 		blt.s	Boundary_Bottom	; if yes, branch
@@ -24313,7 +24309,7 @@ loc_13336:
 Boundary_Bottom:
 		cmpi.w	#$501,($FFFFFE10).w ; is level SBZ2 ?
 		bne.w	KillSonic	; if not, kill Sonic
-		cmpi.w	#$2000,($FFFFD008).w
+		cmpi.w	#$2000,(Object_RAM+$08).w
 		bcs.w	KillSonic
 		clr.b	($FFFFFE30).w	; clear	lamppost counter
 		move.w	#1,($FFFFFE02).w ; restart the level
@@ -24878,7 +24874,7 @@ loc_1380C:
 
 
 Sonic_HurtStop:				; XREF: Obj01_Hurt
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$E0,d0
 		cmp.w	$C(a0),d0
 		bcs.w	KillSonic
@@ -24914,7 +24910,7 @@ Obj01_Death:				; XREF: Obj01_Index
 
 
 GameOver:				; XREF: Obj01_Death
-		move.w	($FFFFF72E).w,d0
+		move.w	(Camera_RAM+$2E).w,d0
 		addi.w	#$100,d0
 		cmp.w	$C(a0),d0
 		bcc.w	locret_13900
@@ -24925,9 +24921,9 @@ GameOver:				; XREF: Obj01_Death
 		subq.b	#1,($FFFFFE12).w ; subtract 1 from number of lives
 		bne.s	loc_138D4
 		move.w	#0,$3A(a0)
-		move.b	#$39,($FFFFD080).w ; load GAME object
-		move.b	#$39,($FFFFD0C0).w ; load OVER object
-		move.b	#1,($FFFFD0DA).w ; set OVER object to correct frame
+		move.b	#$39,(Object_RAM+$80).w ; load GAME object
+		move.b	#$39,(Object_RAM+$C0).w ; load OVER object
+		move.b	#1,(Object_RAM+$DA).w ; set OVER object to correct frame
 		clr.b	($FFFFFE1A).w
 
 loc_138C2:
@@ -24942,10 +24938,10 @@ loc_138D4:
 		tst.b	($FFFFFE1A).w	; is TIME OVER tag set?
 		beq.s	locret_13900	; if not, branch
 		move.w	#0,$3A(a0)
-		move.b	#$39,($FFFFD080).w ; load TIME object
-		move.b	#$39,($FFFFD0C0).w ; load OVER object
-		move.b	#2,($FFFFD09A).w
-		move.b	#3,($FFFFD0DA).w
+		move.b	#$39,(Object_RAM+$80).w ; load TIME object
+		move.b	#$39,(Object_RAM+$C0).w ; load OVER object
+		move.b	#2,(Object_RAM+$9A).w
+		move.b	#3,(Object_RAM+$DA).w
 		bra.s	loc_138C2
 ; ===========================================================================
 
@@ -25413,11 +25409,11 @@ Obj0A_ShowNumber:			; XREF: Obj0A_Wobble; Obj0A_Display
 		clr.w	$12(a0)
 		move.b	#$80,1(a0)
 		move.w	8(a0),d0
-		sub.w	($FFFFF700).w,d0
+		sub.w	(Camera_Horizontal_Pos).w,d0
 		addi.w	#$80,d0
 		move.w	d0,8(a0)
 		move.w	$C(a0),d0
-		sub.w	($FFFFF704).w,d0
+		sub.w	(Camera_Vertical_Pos).w,d0
 		addi.w	#$80,d0
 		move.w	d0,$A(a0)
 		move.b	#$C,$24(a0)
@@ -25440,9 +25436,9 @@ Obj0A_WobbleData:
 Obj0A_Countdown:			; XREF: Obj0A_Index
 		tst.w	$2C(a0)
 		bne.w	loc_13F86
-		cmpi.b	#6,($FFFFD024).w
+		cmpi.b	#6,(Object_RAM+$24).w
 		bcc.w	locret_1408C
-		btst	#6,($FFFFD022).w
+		btst	#6,(Object_RAM+$22).w
 		beq.w	locret_1408C
 		subq.w	#1,$38(a0)
 		bpl.w	loc_13FAC
@@ -25487,7 +25483,7 @@ Obj0A_ReduceAir:
 		move.w	#1,$36(a0)
 		move.w	#$78,$2C(a0)
 		move.l	a0,-(sp)
-		lea	($FFFFD000).w,a0
+		lea	(Object_RAM).w,a0
 		bsr.w	Sonic_ResetOnFloor
 		move.b	#$17,$1C(a0)	; use Sonic's drowning animation
 		bset	#1,$22(a0)
@@ -25495,7 +25491,7 @@ Obj0A_ReduceAir:
 		move.w	#0,$12(a0)
 		move.w	#0,$10(a0)
 		move.w	#0,$14(a0)
-		move.b	#1,($FFFFF744).w
+		move.b	#1,(Camera_RAM+$44).w
 		movea.l	(sp)+,a0
 		rts	
 ; ===========================================================================
@@ -25503,13 +25499,13 @@ Obj0A_ReduceAir:
 loc_13F86:
 		subq.w	#1,$2C(a0)
 		bne.s	loc_13F94
-		move.b	#6,($FFFFD024).w
+		move.b	#6,(Object_RAM+$24).w
 		rts	
 ; ===========================================================================
 
 loc_13F94:
 		move.l	a0,-(sp)
-		lea	($FFFFD000).w,a0
+		lea	(Object_RAM).w,a0
 		jsr	SpeedToPos
 		addi.w	#$10,$12(a0)
 		movea.l	(sp)+,a0
@@ -25533,22 +25529,22 @@ Obj0A_MakeItem:
 		jsr	SingleObjLoad
 		bne.w	locret_1408C
 		move.b	#$A,0(a1)	; load object
-		move.w	($FFFFD008).w,8(a1) ; match X position to Sonic
+		move.w	(Object_RAM+$08).w,8(a1) ; match X position to Sonic
 		moveq	#6,d0
-		btst	#0,($FFFFD022).w
+		btst	#0,(Object_RAM+$22).w
 		beq.s	loc_13FF2
 		neg.w	d0
 		move.b	#$40,$26(a1)
 
 loc_13FF2:
 		add.w	d0,8(a1)
-		move.w	($FFFFD00C).w,$C(a1)
+		move.w	(Object_RAM+$0C).w,$C(a1)
 		move.b	#6,$28(a1)
 		tst.w	$2C(a0)
 		beq.w	loc_1403E
 		andi.w	#7,$3A(a0)
 		addi.w	#0,$3A(a0)
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		subi.w	#$C,d0
 		move.w	d0,$C(a1)
 		jsr	(RandomNumber).l
@@ -25599,17 +25595,14 @@ locret_1408C:
 ResumeMusic:				; XREF: Obj64_Wobble; Sonic_Water; Obj0A_ReduceAir
 		cmpi.w	#$C,($FFFFFE14).w
 		bhi.s	loc_140AC
-		move.w	#$82,d0		; play LZ music
-		cmpi.w	#$103,($FFFFFE10).w ; check if level is	0103 (SBZ3)
-		bne.s	loc_140A6
-		move.w	#$86,d0		; play SBZ music
+		move.w	($FFFFFF90).w,d0
 
 loc_140A6:
 		jsr	(PlaySound).l
 
 loc_140AC:
 		move.w	#$1E,($FFFFFE14).w
-		clr.b	($FFFFD372).w
+		clr.b	(Object_RAM+$372).w
 		rts	
 ; End of function ResumeMusic
 
@@ -25662,9 +25655,9 @@ Obj38_Shield:				; XREF: Obj38_Index
 		bne.s	Obj38_RmvShield	; if yes, branch
 		tst.b	($FFFFFE2C).w	; does Sonic have shield?
 		beq.s	Obj38_Delete	; if not, branch
-		move.w	($FFFFD008).w,8(a0)
-		move.w	($FFFFD00C).w,$C(a0)
-		move.b	($FFFFD022).w,$22(a0)
+		move.w	(Object_RAM+$08).w,8(a0)
+		move.w	(Object_RAM+$0C).w,$C(a0)
+		move.b	(Object_RAM+$22).w,$22(a0)
 		lea	(Ani_obj38).l,a1
 		jsr	AnimateSprite
 		jmp	DisplaySprite
@@ -25719,7 +25712,7 @@ Obj38_StarTrail2a:
 		lea	(a1,d0.w),a1
 		move.w	(a1)+,8(a0)
 		move.w	(a1)+,$C(a0)
-		move.b	($FFFFD022).w,$22(a0)
+		move.b	(Object_RAM+$22).w,$22(a0)
 		lea	(Ani_obj38).l,a1
 		jsr	AnimateSprite
 		jmp	DisplaySprite
@@ -25759,16 +25752,16 @@ Obj4A_Main2:
 		move.w	#120,$30(a0)	; set time for Sonic's disappearance to 2 seconds
 
 Obj4A_RmvSonic:				; XREF: Obj4A_Index
-		move.w	($FFFFD008).w,8(a0)
-		move.w	($FFFFD00C).w,$C(a0)
-		move.b	($FFFFD022).w,$22(a0)
+		move.w	(Object_RAM+$08).w,8(a0)
+		move.w	(Object_RAM+$0C).w,$C(a0)
+		move.b	(Object_RAM+$22).w,$22(a0)
 		lea	(Ani_obj4A).l,a1
 		jsr	AnimateSprite
 		cmpi.b	#2,$1A(a0)
 		bne.s	Obj4A_Display
-		tst.b	($FFFFD000).w
+		tst.b	(Object_RAM).w
 		beq.s	Obj4A_Display
-		move.b	#0,($FFFFD000).w ; remove Sonic
+		move.b	#0,(Object_RAM).w ; remove Sonic
 		move.w	#$A8,d0
 		jsr	(PlaySound_Special).l ;	play Special Stage "GOAL" sound
 
@@ -25779,7 +25772,7 @@ Obj4A_Display:
 Obj4A_LoadSonic:			; XREF: Obj4A_Index
 		subq.w	#1,$30(a0)	; subtract 1 from time
 		bne.s	Obj4A_Wait	; if time remains, branch
-		move.b	#1,($FFFFD000).w ; load	Sonic object
+		move.b	#1,(Object_RAM).w ; load	Sonic object
 		jmp	DeleteObject
 ; ===========================================================================
 
@@ -25808,7 +25801,7 @@ Obj08_Main:				; XREF: Obj08_Index
 		move.b	#1,$18(a0)
 		move.b	#$10,$19(a0)
 		move.w	#$4259,2(a0)
-		move.w	($FFFFD008).w,8(a0) ; copy x-position from Sonic
+		move.w	(Object_RAM+$08).w,8(a0) ; copy x-position from Sonic
 
 Obj08_Display:				; XREF: Obj08_Index
 		move.w	($FFFFF646).w,$C(a0) ; copy y-position from water height
@@ -27254,7 +27247,7 @@ Obj66_Action:				; XREF: Obj66_Index
 		bsr.w	SolidObject
 		btst	#5,$22(a0)
 		beq.w	Obj66_Display
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#$E,d1
 		move.w	8(a1),d0
 		cmp.w	8(a0),d0
@@ -27296,7 +27289,7 @@ Obj66_Release:				; XREF: Obj66_Index
 loc_151C8:
 		cmp.b	$32(a0),d0
 		beq.s	loc_151F8
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	#0,$10(a1)
 		move.w	#$800,$12(a1)
 		cmpi.b	#4,d0
@@ -27351,7 +27344,7 @@ locret_15246:
 
 
 Obj66_ChgPos:				; XREF: Obj66_GrabSonic
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.b	$1A(a0),d0
 		add.w	d0,d0
@@ -27436,7 +27429,7 @@ Obj67_MoveSonic:			; XREF: Obj67_Action
 		move.b	$38(a0),d2
 		move.w	d2,d3
 		add.w	d3,d3
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	$32(a0),d0
 		add.w	d2,d0
@@ -27536,7 +27529,7 @@ Obj67_MoveSpot:				; XREF: Obj67_Action
 Obj67_ChkDel:				; XREF: Obj67_Action
 		move.w	$32(a0),d0
 		andi.w	#-$80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#-$80,d1
 		sub.w	d1,d0
@@ -27590,7 +27583,7 @@ Obj68_Action:				; XREF: Obj68_Index
 		bsr.s	Obj68_MoveSonic
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -27608,7 +27601,7 @@ Obj68_MoveSonic:			; XREF: Obj68_Action
 		move.b	$38(a0),d2
 		move.w	d2,d3
 		add.w	d3,d3
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		add.w	d2,d0
@@ -27703,7 +27696,7 @@ Obj69_Animate:
 Obj69_NotSolid:
 		btst	#3,$22(a0)
 		beq.s	Obj69_Display
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		bclr	#3,$22(a1)
 		bclr	#3,$22(a0)
 		clr.b	$25(a0)
@@ -27744,7 +27737,7 @@ Obj69_Animate2:
 Obj69_NotSolid2:
 		btst	#3,$22(a0)
 		beq.s	Obj69_Display2
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		bclr	#3,$22(a1)
 		bclr	#3,$22(a0)
 		clr.b	$25(a0)
@@ -27804,7 +27797,7 @@ Obj6A_Action:				; XREF: Obj6A_Index
 		jsr	Obj6A_TypeIndex(pc,d1.w)
 		move.w	$3A(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -27890,12 +27883,12 @@ locret_15AB0:
 Obj6A_Type03:				; XREF: Obj6A_TypeIndex
 		tst.b	$3D(a0)
 		bne.s	Obj6A_Animate03
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		subi.w	#$C0,d0
 		bcs.s	loc_15B02
 		sub.w	8(a0),d0
 		bcs.s	loc_15B02
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		subi.w	#$80,d0
 		cmp.w	$C(a0),d0
 		bcc.s	locret_15B04
@@ -27931,11 +27924,11 @@ locret_15B24:
 Obj6A_Type04:				; XREF: Obj6A_TypeIndex
 		tst.b	$3D(a0)
 		bne.s	Obj6A_Animate04
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		addi.w	#$E0,d0
 		sub.w	8(a0),d0
 		bcc.s	loc_15B74
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		subi.w	#$80,d0
 		cmp.w	$C(a0),d0
 		bcc.s	locret_15B76
@@ -28085,7 +28078,7 @@ Obj6B_Action:				; XREF: Obj6B_Index
 Obj6B_ChkDel:
 		move.w	$34(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -28405,7 +28398,7 @@ loc_160D6:
 Obj6C_NotSolid:				; XREF: Obj6C_Vanish
 		btst	#3,$22(a0)
 		beq.s	Obj6C_Display
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		bclr	#3,$22(a1)
 		bclr	#3,$22(a0)
 		move.b	#2,$24(a0)
@@ -28492,7 +28485,7 @@ Obj6F:					; XREF: Obj_Index
 		jsr	Obj6F_Index(pc,d1.w)
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -28638,7 +28631,7 @@ loc_163D8:				; XREF: Obj6F_Index
 loc_16404:
 		btst	#3,$22(a0)
 		beq.s	loc_16420
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		bclr	#3,$22(a1)
 		bclr	#3,$22(a0)
 		clr.b	$25(a0)
@@ -28752,7 +28745,7 @@ Obj70_Solid:
 Obj70_ChkDel:
 		move.w	$32(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -28799,7 +28792,7 @@ Obj72:					; XREF: Obj_Index
 		jsr	Obj72_Index(pc,d1.w)
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -28830,7 +28823,7 @@ Obj72_Main:				; XREF: Obj72_Index
 		move.w	(a2)+,$38(a0)
 
 loc_166C8:				; XREF: Obj72_Index
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		btst	#0,$22(a0)
@@ -28873,7 +28866,7 @@ locret_1675C:
 ; ===========================================================================
 
 loc_1675E:				; XREF: Obj72_Index
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.b	$32(a0),d0
 		addq.b	#2,$32(a0)
 		jsr	(CalcSine).l
@@ -28894,7 +28887,7 @@ locret_16796:
 
 loc_16798:				; XREF: Obj72_Index
 		addq.l	#4,sp
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		subq.b	#1,$2E(a0)
 		bpl.s	loc_167DA
 		move.w	$36(a0),8(a1)
@@ -29152,7 +29145,7 @@ Obj78_AniHead:
 Obj78_Display:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -29443,12 +29436,12 @@ Obj79_BlueLamp:				; XREF: Obj79_Index
 ; ===========================================================================
 
 Obj79_HitLamp:
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		addq.w	#8,d0
 		cmpi.w	#$10,d0
 		bcc.w	locret_16F90
-		move.w	($FFFFD00C).w,d0
+		move.w	(Object_RAM+$0C).w,d0
 		sub.w	$C(a0),d0
 		addi.w	#$40,d0
 		cmpi.w	#$68,d0
@@ -29519,16 +29512,16 @@ Obj79_StoreInfo:			; XREF: Obj79_HitLamp
 		move.w	($FFFFFE20).w,($FFFFFE36).w 	; rings
 		move.b	($FFFFFE1B).w,($FFFFFE54).w 	; lives
 		move.l	($FFFFFE22).w,($FFFFFE38).w 	; time
-		move.b	($FFFFF742).w,($FFFFFE3C).w 	; routine counter for dynamic level mod
-		move.w	($FFFFF72E).w,($FFFFFE3E).w 	; lower y-boundary of level
-		move.w	($FFFFF700).w,($FFFFFE40).w 	; screen x-position
-		move.w	($FFFFF704).w,($FFFFFE42).w 	; screen y-position
-		move.w	($FFFFF708).w,($FFFFFE44).w 	; bg position
-		move.w	($FFFFF70C).w,($FFFFFE46).w 	; bg position
-		move.w	($FFFFF710).w,($FFFFFE48).w 	; bg position
-		move.w	($FFFFF714).w,($FFFFFE4A).w 	; bg position
-		move.w	($FFFFF718).w,($FFFFFE4C).w 	; bg position
-		move.w	($FFFFF71C).w,($FFFFFE4E).w 	; bg position
+		move.b	(Camera_RAM+$42).w,($FFFFFE3C).w 	; routine counter for dynamic level mod
+		move.w	(Camera_RAM+$2E).w,($FFFFFE3E).w 	; lower y-boundary of level
+		move.w	(Camera_Horizontal_Pos).w,($FFFFFE40).w 	; screen x-position
+		move.w	(Camera_Vertical_Pos).w,($FFFFFE42).w 	; screen y-position
+		move.w	(Camera_RAM+$08).w,($FFFFFE44).w 	; bg position
+		move.w	(Camera_RAM+$0C).w,($FFFFFE46).w 	; bg position
+		move.w	(Camera_RAM+$10).w,($FFFFFE48).w 	; bg position
+		move.w	(Camera_RAM+$14).w,($FFFFFE4A).w 	; bg position
+		move.w	(Camera_RAM+$18).w,($FFFFFE4C).w 	; bg position
+		move.w	(Camera_RAM+$1C).w,($FFFFFE4E).w 	; bg position
 		move.w	($FFFFF648).w,($FFFFFE50).w 	; water height
 		move.b	($FFFFF64D).w,($FFFFFE52).w 	; rountine counter for water
 		move.b	($FFFFF64E).w,($FFFFFE53).w 	; water direction
@@ -29543,8 +29536,8 @@ Obj79_StoreInfo:			; XREF: Obj79_HitLamp
 
 Obj79_LoadInfo:				; XREF: LevelSizeLoad
 		move.b	($FFFFFE31).w,($FFFFFE30).w
-		move.w	($FFFFFE32).w,($FFFFD008).w
-		move.w	($FFFFFE34).w,($FFFFD00C).w
+		move.w	($FFFFFE32).w,(Object_RAM+$08).w
+		move.w	($FFFFFE34).w,(Object_RAM+$0C).w
 		move.w	($FFFFFE36).w,($FFFFFE20).w
 		move.b	($FFFFFE54).w,($FFFFFE1B).w
 		clr.w	($FFFFFE20).w
@@ -29552,18 +29545,18 @@ Obj79_LoadInfo:				; XREF: LevelSizeLoad
 		move.l	($FFFFFE38).w,($FFFFFE22).w
 		move.b	#59,($FFFFFE25).w
 		subq.b	#1,($FFFFFE24).w
-		move.b	($FFFFFE3C).w,($FFFFF742).w
+		move.b	($FFFFFE3C).w,(Camera_RAM+$42).w
 		move.b	($FFFFFE52).w,($FFFFF64D).w
-		move.w	($FFFFFE3E).w,($FFFFF72E).w
-		move.w	($FFFFFE3E).w,($FFFFF726).w
-		move.w	($FFFFFE40).w,($FFFFF700).w
-		move.w	($FFFFFE42).w,($FFFFF704).w
-		move.w	($FFFFFE44).w,($FFFFF708).w
-		move.w	($FFFFFE46).w,($FFFFF70C).w
-		move.w	($FFFFFE48).w,($FFFFF710).w
-		move.w	($FFFFFE4A).w,($FFFFF714).w
-		move.w	($FFFFFE4C).w,($FFFFF718).w
-		move.w	($FFFFFE4E).w,($FFFFF71C).w
+		move.w	($FFFFFE3E).w,(Camera_RAM+$2E).w
+		move.w	($FFFFFE3E).w,(Camera_RAM+$26).w
+		move.w	($FFFFFE40).w,(Camera_Horizontal_Pos).w
+		move.w	($FFFFFE42).w,(Camera_Vertical_Pos).w
+		move.w	($FFFFFE44).w,(Camera_RAM+$08).w
+		move.w	($FFFFFE46).w,(Camera_RAM+$0C).w
+		move.w	($FFFFFE48).w,(Camera_RAM+$10).w
+		move.w	($FFFFFE4A).w,(Camera_RAM+$14).w
+		move.w	($FFFFFE4C).w,(Camera_RAM+$18).w
+		move.w	($FFFFFE4E).w,(Camera_RAM+$1C).w
 		cmpi.b	#1,($FFFFFE10).w
 		bne.s	loc_170E4
 		move.w	($FFFFFE50).w,($FFFFF648).w
@@ -29575,7 +29568,7 @@ loc_170E4:
 		bpl.s	locret_170F6
 		move.w	($FFFFFE32).w,d0
 		subi.w	#$A0,d0
-		move.w	d0,($FFFFF728).w
+		move.w	d0,(Camera_RAM+$28).w
 
 locret_170F6:
 		rts	
@@ -29607,7 +29600,7 @@ Obj7D_Main:				; XREF: Obj7D_Index
 		moveq	#$10,d2
 		move.w	d2,d3
 		add.w	d3,d3
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		move.w	8(a1),d0
 		sub.w	8(a0),d0
 		add.w	d2,d0
@@ -29641,7 +29634,7 @@ Obj7D_Main:				; XREF: Obj7D_Index
 Obj7D_ChkDel:
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -29664,7 +29657,7 @@ Obj7D_DelayDel:				; XREF: Obj7D_Index
 		bmi.s	Obj7D_Delete2	; if time is zero, branch
 		move.w	8(a0),d0
 		andi.w	#-$80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#-$80,d1
 		sub.w	d1,d0
@@ -30032,9 +30025,9 @@ loc_179EE:
 loc_179F6:				; XREF: Obj3D_ShipIndex
 		move.w	#$400,$10(a0)
 		move.w	#-$40,$12(a0)
-		cmpi.w	#$2AC0,($FFFFF72A).w
+		cmpi.w	#$2AC0,(Camera_RAM+$2A).w
 		beq.s	loc_17A10
-		addq.w	#2,($FFFFF72A).w
+		addq.w	#2,(Camera_RAM+$2A).w
 		bra.s	loc_17A16
 ; ===========================================================================
 
@@ -30077,7 +30070,7 @@ loc_17A46:
 ; ===========================================================================
 
 loc_17A50:
-		cmpi.b	#4,($FFFFD024).w
+		cmpi.b	#4,(Object_RAM+$24).w
 		bcs.s	loc_17A5A
 		moveq	#4,d1
 
@@ -30375,7 +30368,7 @@ Obj77_LoadBoss:				; XREF: Obj77_Main
 		dbf	d1,Obj77_Loop
 
 Obj77_ShipMain:
-		lea	($FFFFD000).w,a1
+		lea	(Object_RAM).w,a1
 		moveq	#0,d0
 		move.b	$25(a0),d0
 		move.w	Obj77_ShipIndex(pc,d0.w),d1
@@ -30531,7 +30524,7 @@ loc_1806C:
 		swap	d0
 		move.w	d0,8(a0)
 		move.w	$12(a0),d0
-		move.w	($FFFFD00C).w,d1
+		move.w	(Object_RAM+$0C).w,d1
 		sub.w	$C(a0),d1
 		bcs.s	loc_180A2
 		subi.w	#$48,d1
@@ -30618,9 +30611,9 @@ loc_1814E:
 ; ===========================================================================
 
 loc_18152:				; XREF: Obj77_ShipIndex
-		cmpi.w	#$2030,($FFFFF72A).w
+		cmpi.w	#$2030,(Camera_RAM+$2A).w
 		bcc.s	loc_18160
-		addq.w	#2,($FFFFF72A).w
+		addq.w	#2,(Camera_RAM+$2A).w
 		bra.s	loc_18166
 ; ===========================================================================
 
@@ -30658,7 +30651,7 @@ loc_1818C:
 ; ===========================================================================
 
 loc_18196:
-		cmpi.b	#4,($FFFFD024).w
+		cmpi.b	#4,(Object_RAM+$24).w
 		bcs.s	loc_181A0
 		moveq	#4,d1
 
@@ -31032,9 +31025,9 @@ loc_1857A:
 loc_18582:				; XREF: Obj73_ShipIndex
 		move.w	#$500,$10(a0)
 		move.w	#-$40,$12(a0)
-		cmpi.w	#$1960,($FFFFF72A).w
+		cmpi.w	#$1960,(Camera_RAM+$2A).w
 		bcc.s	loc_1859C
-		addq.w	#2,($FFFFF72A).w
+		addq.w	#2,(Camera_RAM+$2A).w
 		bra.s	loc_185A2
 ; ===========================================================================
 
@@ -31081,7 +31074,7 @@ loc_185DA:
 ; ===========================================================================
 
 loc_185E4:
-		cmpi.b	#4,($FFFFD024).w
+		cmpi.b	#4,(Object_RAM+$24).w
 		bcs.s	loc_185EE
 		moveq	#4,d1
 
@@ -31422,7 +31415,7 @@ Obj7A_LoadBoss:				; XREF: Obj7A_Main
 		dbf	d1,Obj7A_Loop	; repeat sequence 3 more times
 
 loc_1895C:
-		lea	($FFFFD040).w,a1
+		lea	(Secondary_Object_RAM).w,a1
 		lea	$2A(a0),a2
 		moveq	#$5E,d0
 		moveq	#$3E,d1
@@ -31586,7 +31579,7 @@ Obj7A_MakeBall:				; XREF: Obj7A_ShipIndex
 		lea	$2A(a0),a1
 		move.w	(a1,d0.w),d0
 		movea.l	d0,a2
-		lea	($FFFFD040).w,a1
+		lea	(Secondary_Object_RAM).w,a1
 		moveq	#$3E,d1
 
 loc_18AFA:
@@ -31679,9 +31672,9 @@ loc_18BC2:
 loc_18BC6:				; XREF: Obj7A_ShipIndex
 		move.w	#$400,$10(a0)
 		move.w	#-$40,$12(a0)
-		cmpi.w	#$2160,($FFFFF72A).w
+		cmpi.w	#$2160,(Camera_RAM+$2A).w
 		bcc.s	loc_18BE0
-		addq.w	#2,($FFFFF72A).w
+		addq.w	#2,(Camera_RAM+$2A).w
 		bra.s	loc_18BE8
 ; ===========================================================================
 
@@ -31713,7 +31706,7 @@ loc_18C06:
 ; ===========================================================================
 
 loc_18C10:
-		cmpi.b	#4,($FFFFD024).w
+		cmpi.b	#4,(Object_RAM+$24).w
 		bcs.s	loc_18C1A
 		moveq	#4,d1
 
@@ -31787,7 +31780,7 @@ Obj7B:					; XREF: Obj_Index
 		jsr	Obj7B_Index(pc,d0.w)
 		move.w	$30(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -31943,7 +31936,7 @@ locret_18EA8:
 ; ===========================================================================
 
 loc_18EAA:				; XREF: Obj7B_Index
-		lea	($FFFFD040).w,a1
+		lea	(Secondary_Object_RAM).w,a1
 		moveq	#$7A,d0
 		moveq	#$40,d1
 		moveq	#$3E,d2
@@ -32054,7 +32047,7 @@ loc_18FA2:
 		beq.s	loc_19008
 		clr.b	$25(a1)
 		move.b	#2,$24(a1)
-		lea	($FFFFD000).w,a2
+		lea	(Object_RAM).w,a2
 		move.w	$12(a0),$12(a2)
 		neg.w	$12(a2)
 		cmpi.b	#1,$1A(a1)
@@ -32313,7 +32306,7 @@ loc_192AE:
 		bgt.s	loc_192E8
 		tst.b	$3D(a0)
 		bne.s	loc_192E8
-		move.w	($FFFFD008).w,d1
+		move.w	(Object_RAM+$08).w,d1
 		subi.w	#$2C00,d1
 		asr.w	#5,d1
 		cmp.b	$34(a0),d1
@@ -32489,7 +32482,7 @@ loc_19446:
 
 Obj75_FindBlocks:			; XREF: loc_192AE
 		clr.w	$36(a0)
-		lea	($FFFFD040).w,a1
+		lea	(Secondary_Object_RAM).w,a1
 		moveq	#$3E,d0
 		moveq	#$76,d1
 		move.b	$34(a0),d2
@@ -32574,9 +32567,9 @@ loc_194EE:
 loc_194F2:				; XREF: Obj75_ShipIndex
 		move.w	#$400,$10(a0)
 		move.w	#-$40,$12(a0)
-		cmpi.w	#$2D40,($FFFFF72A).w
+		cmpi.w	#$2D40,(Camera_RAM+$2A).w
 		bcc.s	loc_1950C
-		addq.w	#2,($FFFFF72A).w
+		addq.w	#2,(Camera_RAM+$2A).w
 		bra.s	loc_19512
 ; ===========================================================================
 
@@ -32650,7 +32643,7 @@ loc_19574:				; XREF: off_19546
 ; ===========================================================================
 
 loc_1957E:
-		cmpi.b	#4,($FFFFD024).w
+		cmpi.b	#4,(Object_RAM+$24).w
 		bcs.s	locret_19588
 		moveq	#4,d1
 
@@ -32985,7 +32978,7 @@ Obj82_EggIndex:	dc.w Obj82_ChkSonic-Obj82_EggIndex
 
 Obj82_ChkSonic:				; XREF: Obj82_EggIndex
 		move.w	8(a0),d0
-		sub.w	($FFFFD008).w,d0
+		sub.w	(Object_RAM+$08).w,d0
 		cmpi.w	#128,d0		; is Sonic within 128 pixels of	Eggman?
 		bcc.s	loc_19934	; if not, branch
 		addq.b	#2,$25(a0)
@@ -33036,7 +33029,7 @@ Obj82_FindBlocks:
 		move.w	$10(a0),d0
 		or.w	$12(a0),d0
 		bne.s	loc_199D0
-		lea	($FFFFD000).w,a1 ; start at the	first object RAM
+		lea	(Object_RAM).w,a1 ; start at the	first object RAM
 		moveq	#$3E,d0
 		moveq	#$40,d1
 
@@ -33180,7 +33173,7 @@ Obj83_Solid2:
 
 loc_19C62:				; XREF: Obj83_Index
 		bclr	#3,$22(a0)
-		bclr	#3,($FFFFD022).w
+		bclr	#3,(Object_RAM+$22).w
 		bra.w	loc_1982C
 ; ===========================================================================
 
@@ -33347,7 +33340,7 @@ loc_19E3E:
 
 loc_19E5A:
 		move.w	#0,$34(a0)
-		move.b	#8,$21(a0)	; set number of	hits to	8
+		move.b	#1,$21(a0)	; set number of	hits to	8
 		move.w	#-1,$30(a0)
 
 Obj85_Eggman:				; XREF: Obj85_Index
@@ -33366,7 +33359,7 @@ off_19E80:	dc.w loc_19E90-off_19E80, loc_19EA8-off_19E80
 loc_19E90:				; XREF: off_19E80
 		tst.l	($FFFFF680).w
 		bne.s	loc_19EA2
-		cmpi.w	#$2450,($FFFFF700).w
+		cmpi.w	#$2450,(Camera_Horizontal_Pos).w
 		bcs.s	loc_19EA2
 		addq.b	#2,$34(a0)
 
@@ -33410,7 +33403,7 @@ loc_19F10:
 		tst.w	$32(a0)
 		bmi.w	loc_19FA6
 		bclr	#0,$22(a0)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcs.s	loc_19F2E
 		bset	#0,$22(a0)
@@ -33432,7 +33425,7 @@ loc_19F48:
 
 loc_19F50:
 		addq.w	#7,($FFFFF636).w
-		cmpi.b	#2,($FFFFD01C).w
+		cmpi.b	#2,(Object_RAM+$1C).w
 		bne.s	loc_19F48
 		move.w	#$300,d0
 		btst	#0,$22(a0)
@@ -33440,7 +33433,7 @@ loc_19F50:
 		neg.w	d0
 
 loc_19F6A:
-		move.w	d0,($FFFFD010).w
+		move.w	d0,(Object_RAM+$10).w
 		tst.b	$35(a0)
 		bne.s	loc_19F88
 		subq.b	#1,$21(a0)
@@ -33527,7 +33520,7 @@ loc_1A02A:				; XREF: off_19E80
 		move.b	#$20,$17(a0)
 		move.w	#$100,$10(a0)
 		move.w	#-$100,$12(a0)
-		addq.b	#2,($FFFFF742).w
+		addq.b	#2,(Camera_RAM+$42).w
 
 loc_1A070:
 		bra.w	loc_1A166
@@ -33545,7 +33538,7 @@ loc_1A074:				; XREF: off_19E80
 loc_1A09A:
 		move.w	#$400,$10(a0)
 		move.w	8(a0),d0
-		sub.w	($FFFFD008).w,d0
+		sub.w	(Object_RAM+$08).w,d0
 		bpl.s	loc_1A0B4
 		move.w	#$500,$10(a0)
 		bra.w	loc_1A0F2
@@ -33611,9 +33604,9 @@ loc_1A15C:
 		jsr	AnimateSprite
 
 loc_1A166:
-		cmpi.w	#$2700,($FFFFF72A).w
+		cmpi.w	#$2700,(Camera_RAM+$2A).w
 		bge.s	loc_1A172
-		addq.w	#2,($FFFFF72A).w
+		addq.w	#2,(Camera_RAM+$2A).w
 
 loc_1A172:
 		cmpi.b	#$C,$34(a0)
@@ -33670,19 +33663,19 @@ loc_1A210:
 		move.b	#$F,$20(a0)
 
 loc_1A216:
-		cmpi.w	#$2790,($FFFFD008).w
+		cmpi.w	#$2790,(Object_RAM+$08).w
 		blt.s	loc_1A23A
 		move.b	#1,($FFFFF7CC).w
 		move.w	#0,($FFFFF602).w
-		clr.w	($FFFFD014).w
+		clr.w	(Object_RAM+$14).w
 		tst.w	$12(a0)
 		bpl.s	loc_1A248
 		move.w	#$100,($FFFFF602).w
 
 loc_1A23A:
-		cmpi.w	#$27E0,($FFFFD008).w
+		cmpi.w	#$27E0,(Object_RAM+$08).w
 		blt.s	loc_1A248
-		move.w	#$27E0,($FFFFD008).w
+		move.w	#$27E0,(Object_RAM+$08).w
 
 loc_1A248:
 		cmpi.w	#$2900,8(a0)
@@ -33796,7 +33789,7 @@ loc_1A38A:
 
 loc_1A38E:				; XREF: Obj85_Index
 		move.b	#$B,$1A(a0)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bcs.s	loc_1A3A6
 		tst.b	1(a0)
@@ -33932,7 +33925,7 @@ loc_1A550:
 
 loc_1A55C:
 		move.b	d0,$1A(a0)
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bmi.s	loc_1A578
 		subi.w	#$140,d0
@@ -34091,7 +34084,7 @@ loc_1A86C:
 		move.w	#$11,d3
 		move.w	8(a0),d4
 		jsr	SolidObject
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		bmi.s	loc_1A89A
 		subi.w	#$140,d0
@@ -34211,7 +34204,7 @@ loc_1A9E6:
 		move.b	#$9A,$20(a0)
 		move.w	#$B4,$28(a0)
 		moveq	#0,d0
-		move.w	($FFFFD008).w,d0
+		move.w	(Object_RAM+$08).w,d0
 		sub.w	8(a0),d0
 		move.w	d0,$10(a0)
 		move.w	#$140,$12(a0)
@@ -34264,7 +34257,7 @@ Obj3E:					; XREF: Obj_Index
 		jsr	Obj3E_Index(pc,d1.w)
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -34327,8 +34320,8 @@ Obj3E_ChkOpened:
 		tst.b	$25(a0)		; has the prison been opened?
 		beq.s	Obj3E_DoOpen	; if yes, branch
 		clr.b	$25(a0)
-		bclr	#3,($FFFFD022).w
-		bset	#1,($FFFFD022).w
+		bclr	#3,(Object_RAM+$22).w
+		bset	#1,(Object_RAM+$22).w
 
 Obj3E_DoOpen:
 		move.b	#2,$1A(a0)	; use frame number 2 (destroyed	prison)
@@ -34354,8 +34347,8 @@ Obj3E_Switched:				; XREF: Obj3E_Index
 		move.b	#1,($FFFFF7CC).w ; lock	controls
 		move.w	#$800,($FFFFF602).w ; make Sonic run to	the right
 		clr.b	$25(a0)
-		bclr	#3,($FFFFD022).w
-		bset	#1,($FFFFD022).w
+		bclr	#3,(Object_RAM+$22).w
+		bset	#1,(Object_RAM+$22).w
 
 locret_1AC60:
 		rts	
@@ -34446,7 +34439,7 @@ Obj3E_EndAct:				; XREF: Obj3E_Index
 		moveq	#$3E,d0
 		moveq	#$28,d1
 		moveq	#$40,d2
-		lea	($FFFFD040).w,a1 ; load	object RAM
+		lea	(Secondary_Object_RAM).w,a1 ; load	object RAM
 
 Obj3E_FindObj28:
 		cmp.b	(a1),d1		; is object $28	(animal) loaded?
@@ -34494,7 +34487,7 @@ TouchResponse:				; XREF: Obj01
 Touch_NoDuck:
 		move.w	#$10,d4
 		add.w	d5,d5
-		lea	($FFFFD800).w,a1 ; begin checking the object RAM
+		lea	(Object_RAM+$800).w,a1 ; begin checking the object RAM
 		move.w	#$5F,d6
 
 Touch_Loop:
@@ -34877,7 +34870,7 @@ SS_ShowLayout:				; XREF: SpecialStage
 		bsr.w	SS_AniWallsRings
 		bsr.w	SS_AniItems
 		move.w	d5,-(sp)
-		lea	($FFFF8000).w,a1
+		lea	(SS_Horizontal_Pos).w,a1
 		move.b	($FFFFF780).w,d0
 		andi.b	#$FC,d0
 		jsr	(CalcSine).l
@@ -34886,13 +34879,13 @@ SS_ShowLayout:				; XREF: SpecialStage
 		muls.w	#$18,d4
 		muls.w	#$18,d5
 		moveq	#0,d2
-		move.w	($FFFFF700).w,d2
+		move.w	(Camera_Horizontal_Pos).w,d2
 		divu.w	#$18,d2
 		swap	d2
 		neg.w	d2
 		addi.w	#-$B4,d2
 		moveq	#0,d3
-		move.w	($FFFFF704).w,d3
+		move.w	(Camera_Vertical_Pos).w,d3
 		divu.w	#$18,d3
 		swap	d3
 		neg.w	d3
@@ -34932,15 +34925,15 @@ loc_1B1C0:
 		move.w	(sp)+,d5
 		lea	($FF0000).l,a0
 		moveq	#0,d0
-		move.w	($FFFFF704).w,d0
+		move.w	(Camera_Vertical_Pos).w,d0
 		divu.w	#$18,d0
 		mulu.w	#$80,d0
 		adda.l	d0,a0
 		moveq	#0,d0
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		divu.w	#$18,d0
 		adda.w	d0,a0
-		lea	($FFFF8000).w,a4
+		lea	(SS_Horizontal_Pos).w,a4
 		move.w	#$F,d7
 
 loc_1B20C:
@@ -35282,7 +35275,7 @@ SS_AniEmeraldSparks:			; XREF: SS_AniIndex
 		bne.s	locret_1B60C
 		clr.l	(a0)
 		clr.l	4(a0)
-		move.b	#4,($FFFFD024).w
+		move.b	#4,(Object_RAM+$24).w
 		move.w	#$A8,d0
 		jsr	(PlaySound_Special).l ;	play special stage GOAL	sound
 
@@ -35359,8 +35352,8 @@ SS_ChkEmldRepeat:
 SS_LoadData:
 		lsl.w	#2,d0
 		lea	SS_StartLoc(pc,d0.w),a1
-		move.w	(a1)+,($FFFFD008).w
-		move.w	(a1)+,($FFFFD00C).w
+		move.w	(a1)+,(Object_RAM+$08).w
+		move.w	(a1)+,(Object_RAM+$0C).w
 		movea.l	SS_LayoutIndex(pc,d0.w),a0
 		lea	($FF4000).l,a1
 		move.w	#0,d0
@@ -35721,18 +35714,18 @@ locret_1BBB4:
 SS_FixCamera:				; XREF: Obj09
 		move.w	$C(a0),d2
 		move.w	8(a0),d3
-		move.w	($FFFFF700).w,d0
+		move.w	(Camera_Horizontal_Pos).w,d0
 		subi.w	#$A0,d3
 		bcs.s	loc_1BBCE
 		sub.w	d3,d0
-		sub.w	d0,($FFFFF700).w
+		sub.w	d0,(Camera_Horizontal_Pos).w
 
 loc_1BBCE:
-		move.w	($FFFFF704).w,d0
+		move.w	(Camera_Vertical_Pos).w,d0
 		subi.w	#$70,d2
 		bcs.s	locret_1BBDE
 		sub.w	d2,d0
-		sub.w	d0,($FFFFF704).w
+		sub.w	d0,(Camera_Vertical_Pos).w
 
 locret_1BBDE:
 		rts	
@@ -36205,7 +36198,7 @@ Obj03:
 		jsr	Obj03_Index(pc,d1.w)
 		move.w	8(a0),d0
 		andi.w	#$FF80,d0
-		move.w	($FFFFF700).w,d1
+		move.w	(Camera_Horizontal_Pos).w,d1
 		subi.w	#$80,d1
 		andi.w	#$FF80,d1
 		sub.w	d1,d0
@@ -36245,7 +36238,7 @@ Obj03_Init:
 		add.w	d0,d0
 		move.w	word_1FD68(pc,d0.w),$32(a0)
 		move.w	$0C(a0),d1
-		lea	($FFFFD000).w,a1 ; a1=character
+		lea	(Object_RAM).w,a1 ; a1=character
 		cmp.w	$0C(a1),d1
 		bcc.s	Obj03_Init_Next
 		move.b	#1,$34(a0)
@@ -36270,7 +36263,7 @@ Obj03_Init_CheckX:
 		add.w	d0,d0
 		move.w	word_1FD68(pc,d0.w),$32(a0)
 		move.w	$08(a0),d1
-		lea	($FFFFD000).w,a1 ; a1=character
+		lea	(Object_RAM).w,a1 ; a1=character
 		cmp.w	$08(a1),d1
 		bcc.s	Obj03_Init_CheckX_Next
 		move.b	#1,$34(a0)
@@ -36286,7 +36279,7 @@ Obj03_MainX:
 		bne.w	return_1FEAC
 		move.w	$08(a0),d1
 		lea	$34(a0),a2
-		lea	($FFFFD000).w,a1 ; a1=character
+		lea	(Object_RAM).w,a1 ; a1=character
 ;		bsr.s	+
 ;		lea	(Sidekick).w,a1 ; a1=character
 
@@ -36378,7 +36371,7 @@ Obj03_MainY:
 		bne.w	return_1FFB6
 		move.w	$0C(a0),d1
 		lea	$34(a0),a2
-		lea	($FFFFD000).w,a1 ; a1=character
+		lea	(Object_RAM).w,a1 ; a1=character
 ;		bsr.s	+
 ;		lea	(Sidekick).w,a1 ; a1=character
 
@@ -37158,7 +37151,7 @@ Hud_End:
 
 TimeOver:				; XREF: Hud_ChkTime
 		clr.b	($FFFFFE1E).w
-		lea	($FFFFD000).w,a0
+		lea	(Object_RAM).w,a0
 		movea.l	a0,a2
 		bsr.w	KillSonic
 		move.b	#1,($FFFFFE1A).w
@@ -37273,13 +37266,13 @@ Hud_TilesZero:	dc.b $FF, $FF, 0, 0
 
 HudDb_XY:				; XREF: HudDebug
 		move.l	#$5C400003,($C00004).l ; set VRAM address
-		move.w	($FFFFF700).w,d1 ; load	camera x-position
+		move.w	(Camera_Horizontal_Pos).w,d1 ; load	camera x-position
 		swap	d1
-		move.w	($FFFFD008).w,d1 ; load	Sonic's x-position
+		move.w	(Object_RAM+$08).w,d1 ; load	Sonic's x-position
 		bsr.s	HudDb_XY2
-		move.w	($FFFFF704).w,d1 ; load	camera y-position
+		move.w	(Camera_Vertical_Pos).w,d1 ; load	camera y-position
 		swap	d1
-		move.w	($FFFFD00C).w,d1 ; load	Sonic's y-position
+		move.w	(Object_RAM+$0C).w,d1 ; load	Sonic's y-position
 ; End of function HudDb_XY
 
 
@@ -37678,13 +37671,13 @@ Debug_Index:	dc.w Debug_Main-Debug_Index
 
 Debug_Main:				; XREF: Debug_Index
 		addq.b	#2,($FFFFFE08).w
-		move.w	($FFFFF72C).w,($FFFFFEF0).w ; buffer level x-boundary
-		move.w	($FFFFF726).w,($FFFFFEF2).w ; buffer level y-boundary
-		move.w	#0,($FFFFF72C).w
-		move.w	#$720,($FFFFF726).w
-		andi.w	#$7FF,($FFFFD00C).w
-		andi.w	#$7FF,($FFFFF704).w
-		andi.w	#$3FF,($FFFFF70C).w
+		move.w	(Camera_RAM+$2C).w,($FFFFFEF0).w ; buffer level x-boundary
+		move.w	(Camera_RAM+$26).w,($FFFFFEF2).w ; buffer level y-boundary
+		move.w	#0,(Camera_RAM+$2C).w
+		move.w	#$720,(Camera_RAM+$26).w
+		andi.w	#$7FF,(Object_RAM+$0C).w
+		andi.w	#$7FF,(Camera_Vertical_Pos).w
+		andi.w	#$3FF,(Camera_RAM+$0C).w
 		move.b	#0,$1A(a0)
 		move.b	#0,$1C(a0)
 		cmpi.b	#$10,($FFFFF600).w ; is	game mode = $10	(special stage)?
@@ -37840,22 +37833,22 @@ Debug_Exit:
 		beq.s	Debug_DoNothing	; if not, branch
 		moveq	#0,d0
 		move.w	d0,($FFFFFE08).w ; deactivate debug mode
-		move.l	#Map_Sonic,($FFFFD004).w
-		move.w	#$780,($FFFFD002).w
-		move.b	d0,($FFFFD01C).w
+		move.l	#Map_Sonic,(Object_RAM+$04).w
+		move.w	#$780,(Object_RAM+$02).w
+		move.b	d0,(Object_RAM+$1C).w
 		move.w	d0,$A(a0)
 		move.w	d0,$E(a0)
-		move.w	($FFFFFEF0).w,($FFFFF72C).w ; restore level boundaries
-		move.w	($FFFFFEF2).w,($FFFFF726).w
+		move.w	($FFFFFEF0).w,(Camera_RAM+$2C).w ; restore level boundaries
+		move.w	($FFFFFEF2).w,(Camera_RAM+$26).w
 		cmpi.b	#$10,($FFFFF600).w ; are you in	the special stage?
 		bne.s	Debug_DoNothing	; if not, branch
 		clr.w	($FFFFF780).w
 		move.w	#$40,($FFFFF782).w ; set new level rotation speed
-		move.l	#Map_Sonic,($FFFFD004).w
-		move.w	#$780,($FFFFD002).w
-		move.b	#2,($FFFFD01C).w
-		bset	#2,($FFFFD022).w
-		bset	#1,($FFFFD022).w
+		move.l	#Map_Sonic,(Object_RAM+$04).w
+		move.w	#$780,(Object_RAM+$02).w
+		move.b	#2,(Object_RAM+$1C).w
+		bset	#2,(Object_RAM+$22).w
+		bset	#1,(Object_RAM+$22).w
 
 Debug_DoNothing:
 		rts	
